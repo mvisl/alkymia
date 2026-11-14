@@ -34,3 +34,5 @@ The brand wordmark is a hand-built vector approximation of the thin letterforms 
 The original view responds to both width and aspect ratio: ≥1001px wide / ≥3:2 windows compact the caption and illustrations; ≥17:10 or ≤740px tall desktop windows remove the secondary caption and cap the panorama to leave room for all five destinations. Tall layouts retain the full caption; mobile remains a vertical list. No body height lock or hidden overflow prevents normal scrolling. Destination labels now lead with the functional title and place the poetic name beneath it.
 
 The original desktop header no longer repeats the five destination links; the illustrated destinations remain primary navigation. Mobile retains its menu drawer for access while scrolling.
+
+The unsupported Passage marker has also been removed from the original panorama; About remains accessible from its illustrated destination and mobile menu. Nonessential lighting/study footer labels are removed; the lighting control itself announces its selected state.

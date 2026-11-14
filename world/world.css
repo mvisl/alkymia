@@ -26,3 +26,5 @@
 .world-canvas>.world-dimmer{transition:opacity .95s ease-in-out}
 .world-canvas[data-active]>.world-dimmer{opacity:.58}
 @media(prefers-reduced-motion:reduce){.world-canvas>.world-dimmer{transition:none}.world-canvas{will-change:auto}}
+
+.world-study{grid-template-rows:minmax(0,1fr)}
