@@ -19,3 +19,7 @@
 @keyframes genesis-wait{to{transform:scaleX(1)}}
 @media(prefers-reduced-motion:reduce){.genesis-vessel::after{display:none}}
 .genesis-vessel img{mask-image:radial-gradient(ellipse at 50% 45%,#000 38%,rgba(0,0,0,.95) 53%,transparent 75%)}
+.genesis-vessel .genesis-enter{display:grid;place-items:center;margin-top:20px;padding:13px 22px;border-radius:30px;background:linear-gradient(135deg,rgba(216,199,167,.12),rgba(117,109,94,.08));box-shadow:inset 0 1px 0 #fff2,inset 0 -1px 0 #c6ad7c0d,0 8px 28px #0005;backdrop-filter:blur(18px);color:#cdbb9c;opacity:.85;transition:background .5s,opacity .5s,box-shadow .5s}
+.genesis-enter svg{display:block;width:172px;height:15px;overflow:visible}
+.genesis-vessel:hover .genesis-enter,.genesis-vessel:focus-visible .genesis-enter{opacity:1;background:linear-gradient(135deg,#d8c7a72e,#756d5e20);box-shadow:inset 0 1px 0 #fff3,0 0 24px #d0af6b0a}
+.genesis-vessel .genesis-enter .sr-only{margin:0;opacity:1}
