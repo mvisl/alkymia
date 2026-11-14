@@ -1,10 +1,9 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Alkymia · Living engraving</title><link rel="stylesheet" href="study.css?v=3"><script type="module" src="study.js?v=3"></script></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Alkymia · Living engraving</title><link rel="stylesheet" href="study.css?v=4"><script type="module" src="study.js?v=4"></script></head>
 <body><header><a href="../../world/" aria-label="Return to Alkymia"><svg viewBox="0 0 450 52" aria-hidden="true"><use href="../../assets/alkymia-wordmark.svg#wordmark"/></svg></a><span>Living engraving · Night</span></header>
 <main><div class="stage" tabindex="0" aria-label="Layered night landscape. Move your pointer gently to explore its depth.">
 <svg class="scene" viewBox="0 80 1672 435" preserveAspectRatio="xMidYMid slice" role="img" aria-label="The night world of Alkymia, with a foreground, stable architecture and distant landscape">
 <defs>
-<image id="original-art" href="original-2x.png" width="1672" height="941" preserveAspectRatio="none"/>
 <filter id="solid-alpha" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncA type="gamma" amplitude="1" exponent=".2" offset="0"/></feComponentTransfer></filter>
 <mask id="left-mask" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="1672" height="941"><image href="../depth/left-foreground.png" width="1672" height="941" preserveAspectRatio="none" filter="url(#solid-alpha)"/></mask>
 <mask id="branch-mask" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="1672" height="941"><image href="right-foreground.png" width="1672" height="941" preserveAspectRatio="none" filter="url(#solid-alpha)"/></mask>
@@ -15,17 +14,17 @@
 </defs>
 <mask id="sky-fade" maskUnits="userSpaceOnUse" x="0" y="80" width="1672" height="435"><defs><linearGradient id="sky-opacity" x1="0" y1="80" x2="0" y2="200" gradientUnits="userSpaceOnUse"><stop stop-color="white" offset="0"/><stop stop-color="white" offset=".45"/><stop stop-color="black" offset="1"/></linearGradient></defs><rect x="0" y="80" width="1672" height="435" fill="url(#sky-opacity)"/><ellipse cx="518" cy="117" rx="42" ry="41" fill="black"/></mask>
 <g id="camera">
-<image class="far-plane" href="distant-plate.png" width="1672" height="941" preserveAspectRatio="none"/>
-<g mask="url(#fixed-mask)"><use href="#original-art" mask="url(#inverse-city)"/></g>
-<g mask="url(#fixed-mask)"><g mask="url(#inverse-city)"><g mask="url(#sky-fade)"><use class="sky-plane" href="#original-art"/></g></g></g>
-<g class="city-plane"><g mask="url(#fixed-mask)"><use href="#original-art" mask="url(#city-rest)"/></g><g clip-path="url(#water-contour)"><use class="water-plane" href="#original-art"/></g></g>
-<g class="hero-plane"><g mask="url(#fixed-mask)"><use href="#original-art" mask="url(#hero-mask)"/></g></g>
-<g class="left-plane"><use href="#original-art" mask="url(#left-mask)"/></g>
-<g class="branch-drift"><use class="branch-plane" href="#original-art" mask="url(#branch-mask)"/></g>
+<image class="far-plane" href="distant-panorama.png" x="0" y="80" width="1672" height="435" preserveAspectRatio="none"/>
+<g mask="url(#fixed-mask)"><image href="panorama-2x.png" x="0" y="80" width="1672" height="435" preserveAspectRatio="none" mask="url(#inverse-city)"/></g>
+<g mask="url(#fixed-mask)"><g mask="url(#inverse-city)"><g mask="url(#sky-fade)"><image class="sky-plane" href="panorama-2x.png" x="0" y="80" width="1672" height="435" preserveAspectRatio="none"/></g></g></g>
+<g class="city-plane"><g mask="url(#fixed-mask)"><image href="panorama-2x.png" x="0" y="80" width="1672" height="435" preserveAspectRatio="none" mask="url(#city-rest)"/></g><g clip-path="url(#water-contour)"><image class="water-plane" href="panorama-2x.png" x="0" y="80" width="1672" height="435" preserveAspectRatio="none"/></g></g>
+<g class="hero-plane"><g mask="url(#fixed-mask)"><image href="panorama-2x.png" x="0" y="80" width="1672" height="435" preserveAspectRatio="none" mask="url(#hero-mask)"/></g></g>
+<g class="left-plane"><image href="panorama-2x.png" x="0" y="80" width="1672" height="435" preserveAspectRatio="none" mask="url(#left-mask)"/></g>
+<g class="branch-drift"><image class="branch-plane" href="panorama-2x.png" x="0" y="80" width="1672" height="435" preserveAspectRatio="none" mask="url(#branch-mask)"/></g>
 </g>
 <g id="mask-comparison"><rect x="0" y="80" width="1672" height="435" fill="black"/><rect x="0" y="80" width="1672" height="435" fill="white" mask="url(#city-mask)"/></g>
 <g id="hero-comparison"><rect x="0" y="80" width="1672" height="435" fill="black"/><rect x="0" y="80" width="1672" height="435" fill="white" mask="url(#hero-mask)"/></g>
-<use id="source-comparison" href="#original-art"/>
+<image id="source-comparison" href="panorama-2x.png" x="0" y="80" width="1672" height="435" preserveAspectRatio="none"/>
 </svg></div>
 <div class="controls"><button id="motion" aria-pressed="true">Motion on</button><button id="compare" aria-pressed="false">Hold to compare</button><label>Approach <input id="approach" type="range" min="0" max="100" value="0" aria-label="Camera approach"></label><button id="mask-view" aria-pressed="false">Architecture mask</button><button id="hero-view" aria-pressed="false">Landmark mask</button><button id="reset">Reset view</button></div>
 <p class="note">Move slowly across the landscape. Use Approach for a gentle move into the scene. Space pauses motion; arrow keys adjust depth.</p><p class="limitation">A separate depth study. Foreground colours come from the source artwork; extraction masks and hidden backgrounds remain provisional. Main landmarks, the small city and the far landscape now have separate depth; the near trees move more. The mask remains a prototype. The main world is unchanged.</p>
