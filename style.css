@@ -68,3 +68,16 @@ html,body,.masthead,.world-caption,.colophon,footer,dialog,.lighting-controls bu
 @keyframes drawer-arrives{from{transform:translateX(-100%);opacity:.5}to{transform:translateX(0);opacity:1}}
 @media(max-width:650px){.masthead{display:block;height:86px;padding:32px 0 0;text-align:center}.masthead .wordmark{font-size:18px;letter-spacing:.18em}.masthead nav{display:none}.menu-toggle{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;position:fixed;top:20px;left:max(10px,env(safe-area-inset-left));z-index:8;width:44px;height:44px;border:0;border-radius:50%;background:color-mix(in srgb,var(--surround) 85%,transparent);backdrop-filter:blur(12px);cursor:pointer;color:var(--ink)}.menu-toggle span{display:block;width:18px;height:1px;background:currentColor}.lighting-controls{top:26px}}
 @media(prefers-reduced-motion:reduce){#mobile-menu[open]{animation:none}}
+
+/* Quiet editorial details; structural rules should recede behind the artwork. */
+:root{--line:#eee1c91c;--quiet:#969b99}
+:root[data-light="sunset"]{--line:#eddfc81c;--quiet:#a8a5a0}
+:root[data-light="day"]{--line:#302b2324;--quiet:#716b62}
+#mobile-menu{border-right-color:var(--line);padding:28px 28px 36px}
+.drawer-top h2{font-size:18px;letter-spacing:.015em;font-weight:400}
+#mobile-menu nav{margin-top:25px}
+#mobile-menu nav a{font-weight:400;font-size:25px;line-height:1.2;padding:22px 0 23px;transition:color .3s}
+#mobile-menu nav small{font-size:9px;line-height:1.6;letter-spacing:.16em;color:var(--quiet);font-weight:400;margin-bottom:10px}
+.menu-close svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.2;stroke-linecap:round}.menu-close{color:var(--muted)}
+.drawer-note{font-size:12px;font-weight:400;letter-spacing:.015em;color:var(--quiet);margin-top:30px}
+.place:after{background:color-mix(in srgb,var(--accent) 55%,transparent)}
