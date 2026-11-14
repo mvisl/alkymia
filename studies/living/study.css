@@ -2,3 +2,5 @@
 .stage{height:auto;aspect-ratio:1672/435;min-height:0}.scene{aspect-ratio:1672/435}@media(max-width:760px){.stage{min-height:0;height:auto}}
 
 #mask-comparison{display:none}.show-mask #mask-comparison{display:block}
+
+.hero-plane{will-change:transform}#hero-comparison{display:none}.show-hero #hero-comparison{display:block}

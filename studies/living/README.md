@@ -11,3 +11,7 @@ Standalone study. Main `/world/` is unchanged and compact screens still use the 
 - Respects reduced motion; offscreen document avoids updating SVG transforms.
 
 The new panorama-only city silhouette separates architecture from the distant landscape. River/ground holes are filled; moon and near trees are subtracted. Generator padding is mapped explicitly: image content y79..644 of 2172×724 maps to the 1672×435 scene. City motion is limited to 1.8 source px plus 0.4% approach scale to avoid exposing inaccurate hidden geometry. No true dolly zoom is claimed.
+
+## Landmark pass
+
+Main tower/base, aquarium, palace and front bridge are separated from the small city by a second panorama-only mask. Their source colours are unchanged. Independent motion remains deliberately limited: city 1.1px / 0.3% extra scale, landmarks 2.8px / 0.7%, near planes 6/8px plus 2.5/3.5% extra scale. Landmark mask and Architecture mask can be inspected separately. Moon stays in sky; near trees are excluded from both architectural masks. Pause freezes layer transforms, and reduced motion disables both animation and camera-approach controls.
