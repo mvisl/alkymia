@@ -2,7 +2,7 @@ import {spaces} from './scene.js';
 const art=(space,cls='')=>`<svg class="${cls}" viewBox="${space.crop.join(' ')}" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><image class="light-layer light-day" href="assets/world-day.png" width="1672" height="941" preserveAspectRatio="none" /><image class="light-layer light-sunset" href="assets/world-sunset.png" width="1672" height="941" preserveAspectRatio="none" /><image class="light-layer light-night" href="assets/world-night.png" width="1672" height="941" preserveAspectRatio="none" /></svg>`;
 document.querySelector('#place-list').innerHTML=spaces.map(s=>`<a class="place" href="#${s.id}">${art(s)}<div class="place-copy"><h2>${s.name}</h2><p>${s.label}</p></div></a>`).join('');
 document.querySelector('#hotspots').innerHTML=spaces.map(s=>`<a class="hotspot" href="#${s.id}" style="left:${s.x}%;top:${s.y}%" aria-label="${s.name}: ${s.label}"><span>${s.name}<small>${s.label}</small></span></a>`).join('');
-const dialog=document.querySelector('dialog');let opener=null;
+const dialog=document.querySelector('#space-dialog');let opener=null;
 function syncRoute(){
  const id=location.hash.slice(1);const i=spaces.findIndex(s=>s.id===id);
  if(i<0){if(dialog.open)dialog.close();return;}
@@ -33,3 +33,14 @@ async function setLight(mode){
  document.querySelector('#current-light').textContent=mode[0].toUpperCase()+mode.slice(1);
 }
 lightChoices.forEach(button=>button.addEventListener('click',()=>setLight(button.dataset.lightChoice)));
+
+const menu = document.querySelector('#mobile-menu');
+const menuToggle = document.querySelector('.menu-toggle');
+function closeMenu(){menu.close();}
+menuToggle.addEventListener('click',()=>{menu.showModal();menuToggle.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';});
+document.querySelector('.menu-close').addEventListener('click',closeMenu);
+menu.querySelectorAll('a').forEach(link=>link.addEventListener('click',closeMenu));
+menu.addEventListener('click',event=>{if(event.target===menu){const box=menu.getBoundingClientRect();if(event.clientX>box.right||event.clientX<box.left)closeMenu();}});
+menu.addEventListener('close',()=>{menuToggle.setAttribute('aria-expanded','false');if(!dialog.open)document.body.style.overflow='';});
+const mobileLayout = matchMedia('(max-width:650px)');
+mobileLayout.addEventListener('change',event=>{if(!event.matches&&menu.open)closeMenu();});

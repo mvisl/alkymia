@@ -26,3 +26,5 @@ This repository contains only the public site. Private project research and cons
 ## Lighting previews
 
 Night is the initial state. Night / Sunset / Day changes the panorama, destination illustrations, page background, text and dialog palette. Images decode before switching, with a 1.8-second crossfade; reduced-motion disables transitions. No automatic cycle. Existing three concept artworks are used unchanged: they have small drawing differences, so this is an art-direction preview, not a production relighting of pixel-aligned layers. A final continuous lighting sequence needs aligned production art or a shared scene. All assets are local to this repository, not Downloads.
+
+The illumination control floats at the top right, with circular cells in Day → Sunset → Night order. The indicator slides and the active icon gently settles; reduced-motion disables both. Mobile navigation (≤650px) uses a left drawer with a top-left menu button, native modal focus handling, backdrop/Escape dismissal and automatic close when a destination is selected. Desktop navigation remains visible.

@@ -27,3 +27,44 @@ html,body,.masthead,.world-caption,.colophon,footer,dialog,.lighting-controls bu
 @media(prefers-reduced-motion:reduce){html,body,.masthead,.world-caption,.colophon,footer,dialog,.lighting-controls button,.place p{transition:none}}
 
 [data-light="sunset"] .panorama{mask-image:linear-gradient(to bottom,transparent 0%,#000 16%,#000 75%,transparent 100%)}
+
+/* Floating three-position atmosphere control. */
+.lighting-controls{position:fixed;top:max(20px,env(safe-area-inset-top));right:max(24px,env(safe-area-inset-right));z-index:8;display:block;max-width:none;margin:0;padding:0}
+.lighting-controls .lighting-track{position:relative;isolation:isolate;display:flex;gap:3px;padding:5px;border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:32px;background:color-mix(in srgb,var(--paper) 86%,transparent);backdrop-filter:blur(18px);box-shadow:0 8px 30px #0002,inset 0 1px 0 #ffffff08}
+.lighting-indicator{position:absolute;z-index:-1;top:5px;left:5px;width:44px;height:44px;border-radius:50%;background:color-mix(in srgb,var(--accent) 17%,var(--paper));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent),0 2px 9px #0002;transform:translateX(0);transition:transform .55s cubic-bezier(.22,1,.36,1),background-color 1.8s}
+[data-light="sunset"] .lighting-indicator{transform:translateX(47px)}[data-light="day"] .lighting-indicator{transform:translateX(94px)}
+.lighting-controls button{position:relative;display:grid;place-items:center;flex:none;width:44px;height:44px;min-height:44px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--muted);cursor:pointer;transition:color .4s}
+.lighting-controls button[aria-pressed="true"]{border:0;background:transparent;color:var(--ink)}
+.lighting-controls button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;transition:transform .4s}
+.lighting-controls button:hover svg{transform:translateY(-1px)}.lighting-controls button:focus-visible{outline-offset:2px}
+.light-tooltip{position:absolute;top:calc(100% + 14px);left:50%;transform:translate(-50%,-4px);pointer-events:none;opacity:0;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:7px 10px;border-radius:4px;font:10px/1.3 Arial,sans-serif;letter-spacing:.05em;transition:opacity .2s,transform .2s}
+.lighting-controls button:hover .light-tooltip,.lighting-controls button:focus-visible .light-tooltip{opacity:1;transform:translate(-50%,0)}
+@media(min-width:1001px){.masthead{padding-right:220px}}
+@media(max-width:650px){.lighting-controls{top:max(18px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));padding:0;display:block}.masthead{padding:33px 18px 12px;gap:20px}.masthead .wordmark{align-self:flex-start;font-size:22px;letter-spacing:.18em}.masthead nav{margin-top:9px}.lighting-controls button{padding:0}}
+@media(prefers-reduced-motion:reduce){.lighting-indicator,.lighting-controls button svg{transition:none}}
+
+/* Compact sun → sunset → moon dial. */
+.lighting-controls .lighting-track{gap:3px;padding:3px;border-radius:24px}
+.lighting-controls button{width:24px;height:28px;min-height:28px}
+.lighting-controls button:after{content:'';position:absolute;inset:-8px 0;border-radius:15px}
+.lighting-controls button svg{width:15px;height:15px}
+.lighting-indicator{top:3px;left:3px;width:24px;height:28px;border-radius:16px;transform:translateX(54px);transition:transform .65s cubic-bezier(.22,1,.36,1),background-color 1.8s}
+[data-light="night"] .lighting-indicator{transform:translateX(54px)}[data-light="sunset"] .lighting-indicator{transform:translateX(27px)}[data-light="day"] .lighting-indicator{transform:translateX(0)}
+.lighting-controls button[aria-pressed="true"] svg{animation:light-awakens .65s cubic-bezier(.22,1,.36,1) both}
+@keyframes light-awakens{0%{transform:rotate(-22deg) scale(.75);opacity:.45}65%{transform:rotate(5deg) scale(1.08);opacity:1}100%{transform:rotate(0) scale(1);opacity:1}}
+@media(min-width:1001px){.masthead{padding-right:155px}}
+@media(max-width:650px){.lighting-controls{top:max(26px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right))}.masthead .wordmark{font-size:26px}.masthead{padding-top:30px}}
+@media(prefers-reduced-motion:reduce){.lighting-controls button[aria-pressed="true"] svg{animation:none}.lighting-indicator{transition:none}}
+
+/* Circular cells, including the sliding selection. */
+.lighting-controls button{width:24px;height:24px;min-height:24px;border-radius:50%}
+.lighting-indicator{width:24px;height:24px;border-radius:50%}
+.menu-toggle{display:none}
+#mobile-menu{position:fixed;inset:0 auto 0 0;margin:0;width:min(86vw,360px);max-width:none;height:100dvh;max-height:100dvh;border:0;border-right:1px solid var(--line);padding:30px 26px;background:var(--paper);color:var(--ink)}
+#mobile-menu[open]{animation:drawer-arrives .35s cubic-bezier(.22,1,.36,1)}
+#mobile-menu::backdrop{background:#060b10a6;backdrop-filter:blur(6px)}
+.drawer-top{display:flex;justify-content:space-between;align-items:center;gap:12px}.drawer-top h2{font-size:19px;font-weight:400;letter-spacing:.04em;margin:0}.menu-close{background:none;border:0;min-width:44px;min-height:44px;font-size:30px;cursor:pointer}
+#mobile-menu nav{display:flex;flex-direction:column;margin-top:30px}#mobile-menu nav a{padding:20px 0;border-bottom:1px solid var(--line);font-size:24px}#mobile-menu nav small{display:block;margin-bottom:8px;font:9px Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}.drawer-note{font-size:13px;font-style:italic;color:var(--muted);margin-top:35px}
+@keyframes drawer-arrives{from{transform:translateX(-100%);opacity:.5}to{transform:translateX(0);opacity:1}}
+@media(max-width:650px){.masthead{display:block;height:86px;padding:32px 0 0;text-align:center}.masthead .wordmark{font-size:18px;letter-spacing:.18em}.masthead nav{display:none}.menu-toggle{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;position:fixed;top:20px;left:max(10px,env(safe-area-inset-left));z-index:8;width:44px;height:44px;border:0;border-radius:50%;background:color-mix(in srgb,var(--surround) 85%,transparent);backdrop-filter:blur(12px);cursor:pointer;color:var(--ink)}.menu-toggle span{display:block;width:18px;height:1px;background:currentColor}.lighting-controls{top:26px}}
+@media(prefers-reduced-motion:reduce){#mobile-menu[open]{animation:none}}
