@@ -89,6 +89,7 @@ html,body,.masthead,.world-caption,.colophon,footer,dialog,.lighting-controls bu
 @media(hover:hover){.menu-toggle:hover span:nth-child(1){width:17px}.menu-toggle:hover span:nth-child(3){width:12px}}
 @media(prefers-reduced-motion:reduce){.menu-toggle span{transition:none}}
 
-/* Keep the parallel world study discoverable without replacing this view. */
-.world-study-link{display:table;margin:0 auto 18px;padding:9px 13px;color:var(--muted);font:10px/1.5 Arial,sans-serif;letter-spacing:.13em;text-transform:uppercase;border-bottom:1px solid var(--line)}.world-study-link span{margin-left:8px}.world-study-link:hover{color:var(--ink);border-color:var(--accent)}
-@media(max-width:650px){.world-study-link{font-size:9px;margin-top:-4px;margin-bottom:14px}}
+/* A quiet secondary link, attached to the lighting control rather than the page flow. */
+.world-study-link{position:fixed;z-index:7;top:57px;right:24px;display:block;width:86px;margin:0;padding:7px 0;text-align:center;color:var(--quiet);font:9px/1.5 Arial,sans-serif;letter-spacing:.08em;text-transform:none;border:0;transition:color .25s}
+.world-study-link span{margin-left:3px;font-size:10px}.world-study-link:hover{color:var(--ink)}
+@media(max-width:650px){.world-study-link{top:61px;right:16px;font-size:8px;margin:0}}
