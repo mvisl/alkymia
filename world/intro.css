@@ -1,0 +1,21 @@
+.genesis{position:fixed;inset:0;z-index:1000;background:#000;color:#cfbda0;display:grid;place-items:center;transition:opacity 2.8s cubic-bezier(.22,.61,.36,1);isolation:isolate}
+.genesis-word{position:absolute;width:min(54vw,540px);height:auto;opacity:0;filter:blur(3px);transition:opacity 1.5s ease,filter 2s ease}
+.genesis[data-phase=word] .genesis-word{opacity:1;filter:blur(0)}
+.genesis-vessel{position:absolute;display:flex;flex-direction:column;align-items:center;background:none;border:0;color:inherit;padding:0;opacity:0;visibility:hidden;transition:opacity 1.8s ease;cursor:pointer}
+.genesis-vessel img{display:block;width:auto;height:clamp(180px,32svh,330px);max-width:80vw;object-fit:contain}
+.genesis-vessel span{font:10px/1.5 sans-serif;letter-spacing:.23em;text-transform:uppercase;margin-top:22px;color:#ae9d83;opacity:.65}
+.genesis[data-phase=vessel] .genesis-vessel{opacity:1;visibility:visible}
+.genesis-skip{position:absolute;top:28px;right:30px;border:0;background:none;color:#c9bcaa;opacity:.45;font:10px/1.5 sans-serif;letter-spacing:.12em;cursor:pointer;padding:10px}
+.genesis-skip:hover,.genesis-skip:focus-visible{opacity:1}
+.genesis.is-leaving{opacity:0;pointer-events:none}
+.genesis.is-leaving .genesis-vessel{opacity:0;transition:opacity .9s ease}
+.genesis-replay{position:fixed;left:28px;bottom:12px;z-index:10;font:9px/1.5 sans-serif;letter-spacing:.08em;color:var(--ink,#d4c5a8);opacity:.4;background:none;border:0;cursor:pointer;padding:7px}
+.genesis-replay:hover,.genesis-replay:focus-visible{opacity:1}
+@media(max-width:650px){.genesis-word{width:72vw}.genesis-skip{top:16px;right:14px}.genesis-replay{left:12px;bottom:4px}}
+@media(prefers-reduced-motion:reduce){.genesis,.genesis-word,.genesis-vessel{transition-duration:.2s;filter:none}}
+.genesis[hidden]{display:none}
+.genesis-vessel::after{content:'';display:block;margin-top:16px;width:100px;height:1px;background:#bba581;opacity:.35;transform:scaleX(0);transform-origin:left}
+.genesis[data-phase=vessel] .genesis-vessel::after{animation:genesis-wait 7s linear forwards}
+@keyframes genesis-wait{to{transform:scaleX(1)}}
+@media(prefers-reduced-motion:reduce){.genesis-vessel::after{display:none}}
+.genesis-vessel img{mask-image:radial-gradient(ellipse at 50% 45%,#000 38%,rgba(0,0,0,.95) 53%,transparent 75%)}
