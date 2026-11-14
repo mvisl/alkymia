@@ -88,3 +88,7 @@ html,body,.masthead,.world-caption,.colophon,footer,dialog,.lighting-controls bu
 .menu-toggle span:nth-child(3){width:9px;opacity:1}
 @media(hover:hover){.menu-toggle:hover span:nth-child(1){width:17px}.menu-toggle:hover span:nth-child(3){width:12px}}
 @media(prefers-reduced-motion:reduce){.menu-toggle span{transition:none}}
+
+/* Keep the parallel world study discoverable without replacing this view. */
+.world-study-link{display:table;margin:0 auto 18px;padding:9px 13px;color:var(--muted);font:10px/1.5 Arial,sans-serif;letter-spacing:.13em;text-transform:uppercase;border-bottom:1px solid var(--line)}.world-study-link span{margin-left:8px}.world-study-link:hover{color:var(--ink);border-color:var(--accent)}
+@media(max-width:650px){.world-study-link{font-size:9px;margin-top:-4px;margin-bottom:14px}}
