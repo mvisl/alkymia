@@ -4,3 +4,26 @@
 @media(max-width:650px){.masthead{padding:28px 20px 12px;gap:18px}.wordmark{font-size:36px}.masthead nav{width:100%;justify-content:space-between;gap:8px;font-size:9px;letter-spacing:.07em}.landscape{height:250px;overflow:hidden}.panorama{height:100%;width:960px;max-width:none;position:absolute;left:50%;transform:translateX(-50%)}#hotspots{display:none}.world-caption{padding:25px 24px 30px}h1{font-size:27px;letter-spacing:.06em;max-width:300px;margin:14px auto}.world-caption p{font-size:13px}.edition{font-size:8px}.explore-link{margin-top:17px}.places{padding:0 22px 30px}.place-list{display:flex;flex-direction:column;gap:0}.place{display:grid;grid-template-columns:43% 1fr;align-items:center;text-align:left;gap:10px;padding:22px 0;border-top:1px solid var(--line)}.place svg{grid-row:1;aspect-ratio:1.25}.place h2{font-size:15px;letter-spacing:.13em;margin:0 0 9px}.place p{font-size:12px;line-height:1.6}.place:after{display:none}.place-copy:after{content:'Explore →';display:block;margin-top:15px;color:var(--accent);font:9px Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase}.colophon{margin:0 22px;padding:24px 0;flex-direction:column;gap:10px;font-size:12px}footer{padding:0 22px 25px;font-size:8px}.dialog-shell{padding:18px 25px 30px}.space-line{font-size:20px}.space-body{font-size:14px}.space-navigation{font-size:10px}.close{padding-right:0}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
 .panorama{mask-image:linear-gradient(to bottom,#000 90%,transparent 100%)}.place svg,.space-art{mask-image:radial-gradient(ellipse 67% 68% at 50% 50%,#000 58%,transparent 100%)}
+
+/* The site shell stays dark; time of day belongs to the illustrated world. */
+:root{--paper:#151c20;--ink:#eee1c9;--muted:#bfb29e;--line:#46504f;--accent:#d1ad74;color-scheme:dark;background:#101619}
+body{background:radial-gradient(ellipse at 50% 0%,#26303866,transparent 65%),#101619}
+.lighting-controls{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 auto;padding:10px 5% 20px;max-width:1600px}.lighting-label{font:10px/1.5 Arial,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}.lighting-controls>div{display:flex;gap:5px}.lighting-controls button{background:transparent;border:1px solid transparent;border-radius:0;padding:10px 15px;min-height:44px;cursor:pointer;font:11px Arial,sans-serif;letter-spacing:.08em;color:var(--muted)}.lighting-controls button[aria-pressed="true"]{border-color:var(--accent);color:var(--ink);background:#ffffff06}.lighting-controls button:hover{color:var(--ink)}
+.light-layer{opacity:0;transition:opacity 1.8s ease-in-out}.light-day{opacity:1}[data-light="sunset"] .light-sunset,[data-light="night"] .light-night{opacity:1}
+.place svg,.space-art{mix-blend-mode:normal;mask-image:radial-gradient(ellipse 62% 65% at 50% 50%,#000 45%,transparent 100%)}
+.panorama{mask-image:linear-gradient(to bottom,transparent 0%,#000 7%,#000 86%,transparent 100%)}
+.hotspot{background:#11191cc9;color:#f5e8cf;border-color:#ddccb2aa}.hotspot:hover,.hotspot:focus-visible{background:#263238}.hotspot span{box-shadow:0 8px 28px #0006}
+[data-light="day"] .landscape{background:#f5ebdb}.landscape{transition:background-color 1.8s}.masthead nav a{display:inline-block;min-height:44px;padding-top:14px}
+@media(max-width:650px){.lighting-controls{flex-direction:column;padding:0 20px 15px;gap:3px}.lighting-label{font-size:8px}.lighting-controls button{padding:10px 20px}.landscape{height:250px}.place-list{gap:0}}
+@media(prefers-reduced-motion:reduce){.light-layer,.landscape{transition:none}}
+/* Explicit user choice: page surroundings follow the selected illumination. */
+:root{--surround:#101619;--atmosphere:#263038}
+:root[data-light="sunset"]{--surround:#1a1a1e;--atmosphere:#393337;--paper:#232226;--ink:#eddfc8;--muted:#c3b5a1;--line:#494344;--accent:#c8a477}
+:root[data-light="day"]{--surround:#f5ebdb;--atmosphere:#fff9ec;--paper:#f5ebdb;--ink:#302b23;--muted:#6d6252;--line:#cbb99d;--accent:#936d38;color-scheme:light}
+html{background:var(--surround)}body{background:var(--surround);color:var(--ink)}
+html,body,.masthead,.world-caption,.colophon,footer,dialog,.lighting-controls button,.place p{transition:background-color 1.8s ease,color 1.8s ease,border-color 1.8s ease}
+[data-light="day"] .landscape{background:transparent}
+.lighting-controls button[aria-pressed="true"]{background:transparent}
+@media(prefers-reduced-motion:reduce){html,body,.masthead,.world-caption,.colophon,footer,dialog,.lighting-controls button,.place p{transition:none}}
+
+[data-light="sunset"] .panorama{mask-image:linear-gradient(to bottom,transparent 0%,#000 16%,#000 75%,transparent 100%)}

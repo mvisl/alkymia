@@ -22,3 +22,7 @@ Open http://localhost:4173. GitHub Pages deploys on pushes to main.
 - Future motion must resolve to the same geography, keep text and navigation outside the render, and support skip/reduced motion. Keep original art masters separate from delivery exports. Do not infer a 3D reconstruction contract from this PNG.
 
 This repository contains only the public site. Private project research and consultation transcripts are intentionally kept in the separate private Alberto repository. Edit the source in its `website/` subtree; publish using a subtree split, never by changing the visibility of the private repository.
+
+## Lighting previews
+
+Night is the initial state. Night / Sunset / Day changes the panorama, destination illustrations, page background, text and dialog palette. Images decode before switching, with a 1.8-second crossfade; reduced-motion disables transitions. No automatic cycle. Existing three concept artworks are used unchanged: they have small drawing differences, so this is an art-direction preview, not a production relighting of pixel-aligned layers. A final continuous lighting sequence needs aligned production art or a shared scene. All assets are local to this repository, not Downloads.

@@ -1,5 +1,5 @@
 import {spaces} from './scene.js';
-const art=(space,cls='')=>`<svg class="${cls}" viewBox="${space.crop.join(' ')}" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><image href="assets/world-day.png" width="1672" height="941" /></svg>`;
+const art=(space,cls='')=>`<svg class="${cls}" viewBox="${space.crop.join(' ')}" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><image class="light-layer light-day" href="assets/world-day.png" width="1672" height="941" preserveAspectRatio="none" /><image class="light-layer light-sunset" href="assets/world-sunset.png" width="1672" height="941" preserveAspectRatio="none" /><image class="light-layer light-night" href="assets/world-night.png" width="1672" height="941" preserveAspectRatio="none" /></svg>`;
 document.querySelector('#place-list').innerHTML=spaces.map(s=>`<a class="place" href="#${s.id}">${art(s)}<div class="place-copy"><h2>${s.name}</h2><p>${s.label}</p></div></a>`).join('');
 document.querySelector('#hotspots').innerHTML=spaces.map(s=>`<a class="hotspot" href="#${s.id}" style="left:${s.x}%;top:${s.y}%" aria-label="${s.name}: ${s.label}"><span>${s.name}<small>${s.label}</small></span></a>`).join('');
 const dialog=document.querySelector('dialog');let opener=null;
@@ -17,3 +17,19 @@ dialog.addEventListener('cancel',e=>{e.preventDefault();closeSpace();});
 dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeSpace();}});
 dialog.addEventListener('close',()=>{document.body.style.overflow='';if(opener?.isConnected)opener.focus({preventScroll:true});});
 window.addEventListener('hashchange',syncRoute);syncRoute();
+
+// Lighting is independent of navigation. All images share one fixed scene viewport.
+const lightChoices = [...document.querySelectorAll('[data-light-choice]')];
+let lightRequest = 0;
+async function setLight(mode){
+ if(!['night','sunset','day'].includes(mode))return;
+ const request = ++lightRequest;
+ const image = new Image();image.src = `assets/world-${mode}.png`;
+ try { await image.decode(); } catch { return; }
+ if(request!==lightRequest)return;
+ document.documentElement.dataset.light=mode;
+ document.querySelector('meta[name="theme-color"]').content={night:'#101619',sunset:'#1a1a1e',day:'#f5ebdb'}[mode];
+ lightChoices.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.lightChoice===mode)));
+ document.querySelector('#current-light').textContent=mode[0].toUpperCase()+mode.slice(1);
+}
+lightChoices.forEach(button=>button.addEventListener('click',()=>setLight(button.dataset.lightChoice)));

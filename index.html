@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-light="night">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f5ebdb">
+<meta name="theme-color" content="#101619">
 <meta name="description" content="Explore Alkymia: five places for transformation. An illustrated world of vision, design, values, work and connection.">
 <title>Alkymia — Places for Transformation</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
@@ -13,8 +13,9 @@
 <header class="masthead"><a class="wordmark" href="#home" aria-label="Alkymia home">ALKYMIA</a><nav aria-label="Main navigation"><a href="#passage">About</a><a href="#tower">Services</a><a href="#palace">Work</a><a href="#aquarium">Values</a><a href="#bridge">Contact</a></nav></header>
 <main id="home">
 <section class="world" aria-labelledby="world-title">
+<div class="lighting-controls" role="group" aria-label="Landscape lighting"><span class="lighting-label">The same world, a different light</span><div><button data-light-choice="night" aria-pressed="true">Night</button><button data-light-choice="sunset" aria-pressed="false">Sunset</button><button data-light-choice="day" aria-pressed="false">Day</button></div></div>
 <div class="landscape">
-<svg class="panorama" viewBox="0 80 1672 435" role="img" aria-label="An engraved landscape of towers, an aquarium, a palace and a bridge, beside a quiet river"><image href="assets/world-day.png" width="1672" height="941" /></svg>
+<svg class="panorama" viewBox="0 80 1672 435" role="img" aria-label="An engraved landscape of towers, an aquarium, a palace and a bridge, beside a quiet river"><image class="light-layer light-day" href="assets/world-day.png" width="1672" height="941" preserveAspectRatio="none" /><image class="light-layer light-sunset" href="assets/world-sunset.png" width="1672" height="941" preserveAspectRatio="none" /><image class="light-layer light-night" href="assets/world-night.png" width="1672" height="941" preserveAspectRatio="none" /></svg>
 <div id="hotspots" aria-label="Explore the buildings"></div>
 </div>
 <div class="world-caption"><span class="edition">A world in the making · No. 01</span><h1 id="world-title">Places for transformation</h1><p>Five places. One world of possibilities.</p><a class="explore-link" href="#explore">Choose your path <span aria-hidden="true">↓</span></a></div>
@@ -22,7 +23,7 @@
 <section id="explore" class="places" aria-label="The five places"><div id="place-list" class="place-list"></div></section>
 <div class="colophon"><span>Imagination, given form.</span><span>Alkymia · An evolving design study</span></div>
 </main>
-<footer><a href="#home">Back to the world ↑</a><span>Living Engraving / Day</span></footer>
+<footer><a href="#home">Back to the world ↑</a><span>Living Engraving / <span id="current-light">Night</span></span></footer>
 <dialog id="space-dialog" aria-labelledby="space-title"><div class="dialog-shell"><button class="close" aria-label="Close this space">Close <span aria-hidden="true">×</span></button><div id="space-content"></div><nav class="space-navigation" aria-label="Other places"></nav></div></dialog>
 <noscript><p class="no-script">This world is best explored with JavaScript. About & Vision · Services · Values · Selected Work · Contact. This is an early design study; work and contact details are being prepared.</p></noscript>
 </body></html>
