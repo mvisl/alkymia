@@ -1,0 +1,8 @@
+// Canonical destinations. Coordinates use the 1672 × 435 panorama viewBox.
+export const spaces = [
+  {id:'passage',name:'The Passage',label:'About Us & Vision',x:26,y:61,crop:[25,580,375,245],line:'Every transformation begins with a different way of seeing.',body:'Alkymia is an exploration of design as transformation. A place where imagination meets purpose, and ideas find a form.',details:['A point of view','From possibility to purpose','An invitation to explore']},
+  {id:'tower',name:'The Tower',label:'Our Services',x:19,y:27,crop:[405,580,285,245],line:'Ideas take shape. Then they rise.',body:'Explore the disciplines that give an idea its identity, its interface, and its place in the world.',details:['UI / UX Design','Web Design','Branding','Advertising']},
+  {id:'aquarium',name:'The Aquarium',label:'Our Values',x:46,y:54,crop:[695,580,300,245],line:'What lives beneath the surface matters.',body:'Five principles shape this world. Each offers a different way to think about the relationship between an idea and its expression.',details:['Beauty','Efficiency','Development','Reliability','Concreteness']},
+  {id:'palace',name:'The Palace',label:'Selected Work & Clients',x:84,y:57,crop:[1005,580,275,245],line:'A place for ideas that have become real.',body:'This space is reserved for selected projects and the people behind them. The collection is being prepared.',details:['Selected work — coming soon']},
+  {id:'bridge',name:'The Bridge',label:'Get in Touch',x:63,y:69,crop:[1290,580,355,245],line:'Every new possibility starts with a conversation.',body:'The bridge connects this world to the next idea. Contact details will be added when this preview becomes the finished site.',details:['Contact information — coming soon']}
+];
