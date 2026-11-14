@@ -123,3 +123,5 @@ html,body,.masthead,.world-caption,.colophon,footer,dialog,.lighting-controls bu
 .place h2{font:14px/1.4 Arial,sans-serif;letter-spacing:.015em;text-transform:none}.place p{font:italic 13px/1.5 Georgia,serif;letter-spacing:.05em}
 @media(max-width:1000px) and (min-width:761px){.place h2{font-size:12px}.place p{font-size:11px}}
 @media(max-width:760px){.place h2{font-size:15px}.place p{font-size:13px}}
+/* The immersive experiment uses the card edition on compact screens. */
+@media(max-width:760px){.world-study-link{display:none}}
