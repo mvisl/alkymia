@@ -22,3 +22,5 @@ Genesis prototype: black → vector wordmark → small original vessel → scene
 The wordmark shrinks and rises above the vessel. The world waits for a vessel
 click or Skip intro; there is no automatic transition. Escape skips. The beginning replays it. Deep links
 bypass the introduction; reduced motion shortens timings. No explosion yet.
+
+At viewport widths up to 760px, /world/ redirects to the standard card version, preserving section hashes. Resizing to a compact viewport does the same. The immersive introduction currently belongs to desktop only.
