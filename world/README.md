@@ -19,6 +19,6 @@ Camera focus separates pan and zoom. Horizontal framing uses a critically damped
 Silhouette paths were tightened against a source-coordinate grid; bridge arches have cut-outs and edges feather by 4 source pixels. These are still hand-defined masks, not extracted artwork layers. Passage has no scene hotspot or camera target while no tunnel exists in the panorama; its text navigation still opens About. The scene footer labels have been removed.
 
 Genesis prototype: black → vector wordmark → small original vessel → scene fade.
-The world opens automatically after 7 seconds of vessel display; vessel click or
-Skip intro opens it earlier. Escape skips. The beginning replays it. Deep links
+The wordmark shrinks and rises above the vessel. The world waits for a vessel
+click or Skip intro; there is no automatic transition. Escape skips. The beginning replays it. Deep links
 bypass the introduction; reduced motion shortens timings. No explosion yet.

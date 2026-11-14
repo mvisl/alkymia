@@ -23,3 +23,10 @@
 .genesis-enter svg{display:block;width:172px;height:15px;overflow:visible}
 .genesis-vessel:hover .genesis-enter,.genesis-vessel:focus-visible .genesis-enter{opacity:1;background:linear-gradient(135deg,#d8c7a72e,#756d5e20);box-shadow:inset 0 1px 0 #fff3,0 0 24px #d0af6b0a}
 .genesis-vessel .genesis-enter .sr-only{margin:0;opacity:1}
+
+/* The wordmark stays with the vessel; entering is an explicit action. */
+.genesis-word{transition:opacity 1.5s ease,filter 2s ease,transform 2.6s cubic-bezier(.22,.61,.36,1)}
+.genesis[data-phase=vessel] .genesis-word{opacity:1;filter:blur(0);transform:translateY(calc(-1 * clamp(150px,25svh,240px))) scale(.72)}
+.genesis-vessel::after{display:none}
+@media(max-width:650px){.genesis[data-phase=vessel] .genesis-word{transform:translateY(calc(-1 * clamp(150px,25svh,220px))) scale(.78)}}
+@media(prefers-reduced-motion:reduce){.genesis-word{transition-duration:.2s}}
