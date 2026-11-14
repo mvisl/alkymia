@@ -26,7 +26,10 @@
 
 /* The wordmark stays with the vessel; entering is an explicit action. */
 .genesis-word{transition:opacity 1.5s ease,filter 2s ease,transform 2.6s cubic-bezier(.22,.61,.36,1)}
-.genesis[data-phase=vessel] .genesis-word{opacity:1;filter:blur(0);transform:translateY(calc(-1 * clamp(150px,25svh,240px))) scale(.72)}
+.genesis[data-phase=lift] .genesis-word,.genesis[data-phase=vessel] .genesis-word{opacity:1;filter:blur(0);transform:translateY(calc(-1 * clamp(190px,31svh,295px))) scale(.72)}
 .genesis-vessel::after{display:none}
-@media(max-width:650px){.genesis[data-phase=vessel] .genesis-word{transform:translateY(calc(-1 * clamp(150px,25svh,220px))) scale(.78)}}
+@media(max-width:650px){.genesis[data-phase=lift] .genesis-word,.genesis[data-phase=vessel] .genesis-word{transform:translateY(calc(-1 * clamp(180px,29svh,260px))) scale(.78)}}
 @media(prefers-reduced-motion:reduce){.genesis-word{transition-duration:.2s}}
+
+.genesis-word{z-index:3;pointer-events:none}
+.genesis-vessel{z-index:2}
