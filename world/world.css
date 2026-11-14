@@ -20,3 +20,9 @@
 #world-navigation a.is-emphasized{color:var(--ink)}#world-navigation a{transition:color .35s}
 #world-navigation:has(.is-emphasized) a:not(.is-emphasized){color:var(--quiet)}
 @media(prefers-reduced-motion:reduce){.world-canvas>.world-dimmer,#world-navigation a{transition:none}}
+
+/* A restrained camera approach, with a legible fade of the surroundings. */
+.world-canvas{transform-origin:50% 50%;will-change:transform}
+.world-canvas>.world-dimmer{transition:opacity .95s ease-in-out}
+.world-canvas[data-active]>.world-dimmer{opacity:.58}
+@media(prefers-reduced-motion:reduce){.world-canvas>.world-dimmer{transition:none}.world-canvas{will-change:auto}}
