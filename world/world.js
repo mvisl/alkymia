@@ -5,8 +5,8 @@ const stage=document.querySelector('.world-window');
 const canvas=document.querySelector('.world-canvas');
 const boxes={passage:[22,46,11,32],tower:[15,4,9,52],aquarium:[41,38,10,32],palace:[77,26,14,48],bridge:[53,55,24,25]};
 const links=document.querySelector('#world-landmarks');
-links.innerHTML=spaces.map(s=>{const [x,y,w,h]=boxes[s.id];return `<a class="landmark" href="#${s.id}" aria-label="${s.name}: ${s.label}" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%"><span class="landmark-caption"><b>${s.name}</b><small>${s.label}</small></span></a>`;}).join('');
-document.querySelector('#world-navigation').innerHTML=spaces.map(s=>`<a href="#${s.id}"><span>${s.name}</span><small>${s.label}</small></a>`).join('');
+links.innerHTML=spaces.map(s=>{const [x,y,w,h]=boxes[s.id];return `<a class="landmark" href="#${s.id}" aria-label="${s.label}: ${s.name}" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%"><span class="landmark-caption"><b>${s.label}</b><small>${s.name}</small></span></a>`;}).join('');
+document.querySelector('#world-navigation').innerHTML=spaces.map(s=>`<a href="#${s.id}"><span>${s.label}</span><small>${s.name}</small></a>`).join('');
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 function frameSpace(s,animate=true){const box=boxes[s.id];const center=(box[0]+box[2]/2)/100*canvas.clientWidth;stage.scrollTo({left:center-stage.clientWidth/2,behavior:animate&&!reduced.matches?'smooth':'instant'});}
 const dialog=document.querySelector('#space-dialog');let opener=null;

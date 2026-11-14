@@ -1,7 +1,7 @@
 import {spaces} from './scene.js';
 const art=(space,cls='')=>`<svg class="${cls}" viewBox="${space.crop.join(' ')}" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><image class="light-layer light-day" href="assets/world-day.png" width="1672" height="941" preserveAspectRatio="none" /><image class="light-layer light-sunset" href="assets/world-sunset.png" width="1672" height="941" preserveAspectRatio="none" /><image class="light-layer light-night" href="assets/world-night.png" width="1672" height="941" preserveAspectRatio="none" /></svg>`;
-document.querySelector('#place-list').innerHTML=spaces.map(s=>`<a class="place" href="#${s.id}">${art(s)}<div class="place-copy"><h2>${s.name}</h2><p>${s.label}</p></div></a>`).join('');
-document.querySelector('#hotspots').innerHTML=spaces.map(s=>`<a class="hotspot" href="#${s.id}" style="left:${s.x}%;top:${s.y}%" aria-label="${s.name}: ${s.label}"><span>${s.name}<small>${s.label}</small></span></a>`).join('');
+document.querySelector('#place-list').innerHTML=spaces.map(s=>`<a class="place" href="#${s.id}">${art(s)}<div class="place-copy"><h2>${s.label}</h2><p>${s.name}</p></div></a>`).join('');
+document.querySelector('#hotspots').innerHTML=spaces.map(s=>`<a class="hotspot" href="#${s.id}" style="left:${s.x}%;top:${s.y}%" aria-label="${s.label}: ${s.name}"><span>${s.label}<small>${s.name}</small></span></a>`).join('');
 const dialog=document.querySelector('#space-dialog');let opener=null;
 function syncRoute(){
  const id=location.hash.slice(1);const i=spaces.findIndex(s=>s.id===id);
