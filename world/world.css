@@ -28,3 +28,6 @@
 @media(prefers-reduced-motion:reduce){.world-canvas>.world-dimmer{transition:none}.world-canvas{will-change:auto}}
 
 .world-study{grid-template-rows:minmax(0,1fr)}
+.back-study{opacity:.5;transition:opacity .25s}
+.back-study:hover,.back-study:focus-visible{opacity:1}
+@media(min-width:651px){.back-study{position:fixed;top:24px;right:126px;height:32px;padding:0 10px;display:flex;align-items:center}}
