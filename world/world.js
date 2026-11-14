@@ -10,6 +10,20 @@ document.querySelector('#world-navigation').innerHTML=spaces.map(s=>`<a href="#$
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const camera={center:.5,zoom:1};let cameraFrame=0,panVelocity=0,panTarget=.5,lastCameraTime=0;
 let zoomTrack={from:1,to:1,start:0,duration:5000};
+let manualControl=false,lastWheelAt=-Infinity,pointerPosition=null;
+function syncCameraFromScroll(){
+ const width=canvas.clientWidth;if(!width)return;
+ camera.center=(stage.scrollLeft+stage.clientWidth/2-(1-camera.zoom)*width/2)/(width*camera.zoom);
+ panTarget=camera.center;
+}
+function takeManualControl(){
+ manualControl=true;clearTimeout(focusTimer);clearTimeout(clearTimer);
+ cancelAnimationFrame(cameraFrame);cameraFrame=0;panVelocity=0;
+ syncCameraFromScroll();
+ zoomTrack={from:camera.zoom,to:camera.zoom,start:performance.now(),duration:1};
+ delete canvas.dataset.active;document.querySelectorAll('.is-emphasized').forEach(e=>e.classList.remove('is-emphasized'));
+}
+
 function drawCamera(){
  const width=canvas.clientWidth;
  canvas.style.transform=`scale(${camera.zoom})`;
@@ -63,9 +77,23 @@ window.addEventListener('hashchange',route);
 
 document.querySelectorAll('[data-pan]').forEach(b=>b.addEventListener('click',()=>moveCamera(camera.center+Number(b.dataset.pan)*stage.clientWidth*.65/canvas.clientWidth,1,true)));
 let drag=null,dragged=false;
-stage.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0)return;cancelAnimationFrame(cameraFrame);cameraFrame=0;panVelocity=0;panTarget=camera.center;drag={x:e.clientX,left:stage.scrollLeft};dragged=false;});
+stage.addEventListener('pointerdown',e=>{if(e.button!==0)return;takeManualControl();pointerPosition={x:e.clientX,y:e.clientY};if(e.pointerType!=='mouse')return;drag={x:e.clientX,left:stage.scrollLeft};dragged=false;});
+stage.addEventListener('wheel',e=>{lastWheelAt=performance.now();pointerPosition={x:e.clientX,y:e.clientY};takeManualControl();},{passive:true});
+stage.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Home','End','PageUp','PageDown'].includes(e.key))takeManualControl();});
+window.addEventListener('keydown',e=>{if(e.key==='Tab')manualControl=false;});
+function notePointerIntent(e){
+ if(e.pointerType!=='mouse')return;
+ const moved=pointerPosition&&Math.hypot(e.clientX-pointerPosition.x,e.clientY-pointerPosition.y)>4;
+ if(!drag&&manualControl&&moved&&performance.now()-lastWheelAt>350)manualControl=false;
+ if(drag||!manualControl||!pointerPosition)pointerPosition={x:e.clientX,y:e.clientY};
+}
+// Enter/over can be emitted when scenery moves under a stationary pointer.
+// Only a fresh physical pointer displacement may re-arm hover following.
+window.addEventListener('pointermove',notePointerIntent,{capture:true});
+window.addEventListener('pointerover',notePointerIntent,{capture:true});
 window.addEventListener('pointermove',e=>{if(!drag)return;const delta=e.clientX-drag.x;if(Math.abs(delta)>5){dragged=true;stage.classList.add('is-dragging');stage.scrollLeft=drag.left-delta;}});
-window.addEventListener('pointerup',()=>{drag=null;stage.classList.remove('is-dragging');});window.addEventListener('pointercancel',()=>{drag=null;stage.classList.remove('is-dragging');});
+function finishDrag(e){pointerPosition={x:e.clientX,y:e.clientY};drag=null;stage.classList.remove('is-dragging');}
+window.addEventListener('pointerup',finishDrag);window.addEventListener('pointercancel',finishDrag);
 stage.addEventListener('click',e=>{if(dragged){e.preventDefault();e.stopPropagation();dragged=false;}},true);stage.addEventListener('dragstart',e=>e.preventDefault());
 let request=0;document.querySelectorAll('[data-light-choice]').forEach(button=>button.addEventListener('click',async()=>{const id=++request,mode=button.dataset.lightChoice,img=new Image();img.src=`../assets/world-${mode}.png`;try{await img.decode();}catch{return;}if(id!==request)return;document.documentElement.dataset.light=mode;document.querySelectorAll('[data-light-choice]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));document.querySelector('meta[name="theme-color"]').content={night:'#101619',sunset:'#1a1a1e',day:'#f5ebdb'}[mode];}));
 // Keep the source plane proportional to the actual grid space, not a fixed
@@ -75,7 +103,7 @@ function layoutScene(){
  drawCamera();
 }
 layoutScene();route();
-stage.addEventListener('scroll',()=>{if(cameraFrame)return;const width=canvas.clientWidth;camera.center=(stage.scrollLeft+stage.clientWidth/2-(1-camera.zoom)*width/2)/(width*camera.zoom);},{passive:true});
+stage.addEventListener('scroll',()=>{if(cameraFrame)return;syncCameraFromScroll();},{passive:true});
 const sceneLayout=new ResizeObserver(layoutScene);sceneLayout.observe(stage);
 
 // Hand-defined silhouettes in the original image coordinate system. The mask
@@ -90,6 +118,7 @@ const silhouette=document.querySelector('#focus-silhouette');
 const navigation=document.querySelector('#world-navigation');
 let focusTimer,clearTimer;
 function emphasize(id,pan=false){
+ if(manualControl||drag)return;
  clearTimeout(clearTimer);
  const s=spaces.find(s=>s.id===id);if(!s)return;
  if(id==='passage'){release();return;}
@@ -100,10 +129,11 @@ function emphasize(id,pan=false){
 }
 function release(){
  clearTimeout(focusTimer);clearTimeout(clearTimer);
+ if(manualControl||drag)return;
  clearTimer=setTimeout(()=>{delete canvas.dataset.active;document.querySelectorAll('.is-emphasized').forEach(e=>e.classList.remove('is-emphasized'));moveCamera(panTarget,1,true,2200);},180);
 }
 for(const a of navigation.querySelectorAll('a')){
- a.addEventListener('pointerenter',e=>{if(e.pointerType!=='mouse')return;clearTimeout(focusTimer);clearTimeout(clearTimer);focusTimer=setTimeout(()=>emphasize(a.hash.slice(1),true),140);});
+ a.addEventListener('pointerenter',e=>{if(e.pointerType!=='mouse'||manualControl||drag)return;clearTimeout(focusTimer);clearTimeout(clearTimer);focusTimer=setTimeout(()=>emphasize(a.hash.slice(1),true),140);});
  a.addEventListener('pointerleave',release);
  a.addEventListener('focus',()=>emphasize(a.hash.slice(1),true));a.addEventListener('blur',release);
 }

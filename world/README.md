@@ -24,3 +24,10 @@ click or Skip intro; there is no automatic transition. Escape skips. The beginni
 bypass the introduction; reduced motion shortens timings. No explosion yet.
 
 At viewport widths up to 760px, /world/ redirects to the standard card version, preserving section hashes. Resizing to a compact viewport does the same. The immersive introduction currently belongs to desktop only.
+
+Manual camera input has priority: native wheel (including horizontal inertia),
+mouse drag, touch start and keyboard scrolling cancel all pending hover camera
+motion and timers. Position and current magnification are retained. Hover following
+stays disarmed after release until a fresh physical pointer displacement followed
+by a new entry, or explicit keyboard focus. Scenery moving underneath a stationary
+pointer does not count as new intent.
