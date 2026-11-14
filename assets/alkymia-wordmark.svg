@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 52">
+  <title>Alkymia</title>
+  <g id="wordmark" fill="currentColor">
+    <!-- Drawn letterforms inspired by the approved concept, not a font trace. -->
+    <path d="M23 2 44 47 47 49H36l1-2-16-36L5 47l2 2H0l3-2Z"/>
+    <path d="M80 4h10l-2 2v41h15l6-7-2 9H79l2-2V6Z"/>
+    <path d="M140 4h9l-2 2v41l2 2h-9l2-2V6Z"/>
+    <path d="m147 27 24-22-2-1h9l-5 3-18 17 21 22 5 3h-9l-25-26v4Z"/>
+    <path d="M204 4h9l-1 2 15 20 15-20-2-2h7l-4 3-15 21v19l3 2h-11l3-2V28L207 7Z"/>
+    <path d="M270 49h7l-2-2 5-33 18 35h2l18-37 5 35-2 2h11l-3-2-7-44h-2l-20 39-20-39h-3l1 5-6 39Z"/>
+    <path d="M362 4h10l-2 2v41l2 2h-10l2-2V6Z"/>
+    <path d="m425 2 21 45 3 2h-11l1-2-16-36-16 36 2 2h-7l3-2Z"/>
+  </g>
+</svg>
