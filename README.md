@@ -32,3 +32,5 @@ The illumination control floats at the top right, with circular cells in Day →
 The brand wordmark is a hand-built vector approximation of the thin letterforms in the original generated concept (`assets/alkymia-wordmark.svg`), not a claimed identification of a commercial font or a pixel-exact trace. Both views reference the same paths. It inherits the current ink palette; surrounding site typography is unchanged.
 
 The original view responds to both width and aspect ratio: ≥1001px wide / ≥3:2 windows compact the caption and illustrations; ≥17:10 or ≤740px tall desktop windows remove the secondary caption and cap the panorama to leave room for all five destinations. Tall layouts retain the full caption; mobile remains a vertical list. No body height lock or hidden overflow prevents normal scrolling. Destination labels now lead with the functional title and place the poetic name beneath it.
+
+The original desktop header no longer repeats the five destination links; the illustrated destinations remain primary navigation. Mobile retains its menu drawer for access while scrolling.
