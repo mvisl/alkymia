@@ -1,5 +1,5 @@
 import {Application,Container,Sprite,Texture} from '../vendor/pixi-8.22.0/pixi.min.mjs';
-import {WIDTH,HEIGHT,layerPose} from './camera-geometry.mjs?v=world-depth-v2';
+import {WIDTH,HEIGHT,layerPose} from './camera-geometry.mjs?v=moon-composition-v3';
 const stage=document.querySelector('.world-window'),shell=document.querySelector('.scene-shell'),canvas=document.querySelector('.world-canvas'),intro=document.querySelector('.genesis');
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const host=document.createElement('div');host.className='night-renderer light-layer light-night';host.setAttribute('aria-hidden','true');shell.prepend(host);
@@ -30,7 +30,7 @@ new MutationObserver(()=>{last=0;schedule();}).observe(document.documentElement,
 document.querySelector('dialog').addEventListener('close',()=>{last=0;schedule();});
 reduced.addEventListener('change',()=>{target=pointer={x:0,y:0};schedule();});document.addEventListener('visibilitychange',()=>{last=0;schedule();});
 try{
- map=await (await fetch('night-layers.json?v=world-depth-v2')).json();const images={};await Promise.all(names.map(async name=>{const img=new Image();img.src=map[name].url;await img.decode();images[name]=img;const m=map[name],el=document.createElement('div');el.className='night-css-plane';img.alt='';img.draggable=false;img.style.cssText=`left:${m.x}px;top:${m.y}px;width:${m.width}px;height:${m.height}px`;el.append(img);host.append(el);css[name]=el;}));
+ map=await (await fetch('night-layers.json?v=moon-composition-v3')).json();const images={};await Promise.all(names.map(async name=>{const img=new Image();img.src=map[name].url;await img.decode();images[name]=img;const m=map[name],el=document.createElement('div');el.className='night-css-plane';img.alt='';img.draggable=false;img.style.cssText=`left:${m.x}px;top:${m.y}px;width:${m.width}px;height:${m.height}px`;el.append(img);host.append(el);css[name]=el;}));
  // Promise completion order must never determine visual stacking.
  for(const name of names)host.append(css[name]);
  try{app=new Application();await app.init({width:view.width,height:view.height,preference:'webgl',autoStart:false,sharedTicker:false,antialias:false,autoDensity:true,resolution:Math.min(devicePixelRatio||1,2),background:0x0e1518});app.stage.eventMode='none';host.append(app.canvas);

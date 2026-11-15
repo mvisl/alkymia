@@ -39,3 +39,11 @@
 .genesis-word{z-index:3;pointer-events:none}
 .genesis-vessel{z-index:2}
 .genesis-vessel::after{display:none}
+/* Stable vessel geometry; image and entry label fade independently. */
+.genesis-vessel{opacity:1;transition:none;transform:none}
+.genesis-vessel img{opacity:0;transform:none;transition:opacity 2.8s cubic-bezier(.22,.61,.36,1)}
+.genesis-vessel .genesis-enter{opacity:0;transition:opacity 2s ease,background .5s,box-shadow .5s}
+.genesis[data-phase=vessel] .genesis-vessel img{opacity:1}
+.genesis[data-phase=vessel] .genesis-enter{opacity:.85}
+.genesis[data-phase=vessel] .genesis-vessel:hover .genesis-enter,.genesis[data-phase=vessel] .genesis-vessel:focus-visible .genesis-enter{opacity:1}
+@media(prefers-reduced-motion:reduce){.genesis-vessel img,.genesis-vessel .genesis-enter{transition-duration:.2s}}

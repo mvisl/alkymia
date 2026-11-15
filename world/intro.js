@@ -11,7 +11,7 @@ function start(){
  world.forEach(el=>el.inert=true);
  if(document.activeElement===replay)intro.querySelector('.genesis-skip').focus({preventScroll:true});
  later(()=>intro.dataset.phase='word',reduced.matches?100:650);
- later(()=>intro.dataset.phase='vessel',reduced.matches?700:4600);
+ later(()=>intro.dataset.phase='vessel',reduced.matches?500:2300);
 }
 function enter(){
  timers.forEach(clearTimeout);timers=[];

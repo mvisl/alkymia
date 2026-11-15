@@ -1,5 +1,5 @@
 import {spaces} from '../scene.js';
-import {cycle} from './camera-geometry.mjs?v=world-depth-v2';
+import {cycle} from './camera-geometry.mjs?v=moon-composition-v3';
 // Canonical panorama coordinates drive HTML navigation and the night renderer.
 // Native input, automatic drift and focus flights share one camera.
 const stage=document.querySelector('.world-window');

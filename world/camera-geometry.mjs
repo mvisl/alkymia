@@ -7,8 +7,8 @@ export function constrainCenter(center,view){const edge=centerLimit(view);return
 // window when panning; none of them follow the viewport as a fixed decoration.
 export const depths={
  'sky-backdrop':{zoom:.38,pan:.94,look:1},
- moon:{zoom:.38,pan:.94,look:1},
- 'moon-halo':{zoom:.38,pan:.94,look:1},
+ moon:{zoom:.38,pan:.08,look:.25},
+ 'moon-halo':{zoom:.38,pan:.08,look:.25},
  'sky-clouds':{zoom:.4,pan:.94,look:1.4},
  'distant-mountains':{zoom:.65,pan:.97,look:2},
  'city-separated':{zoom:1,pan:1,look:3},
@@ -22,10 +22,14 @@ export const depths={
 export function layerPose(id,meta,view,camera,pointer,depth=true){
  const {width:w,height:h}=view,s=h/HEIGHT,z=depth?camera.zoom-1:0;
  const d=depths[id]??{zoom:1,pan:1,look:3},scale=s*(1+z*d.zoom);
- const pan=depth?d.pan:1,look=depth?d.look:0;
+ const celestial=id==='moon'||id==='moon-halo';
+ const pan=celestial?Math.min(d.pan,w/(WIDTH*s*camera.zoom)*.12):(depth?d.pan:1),look=depth?d.look:0;
  // Use source-centred pan, distinct depth ratios and a shared baseline. At
  // center=.5/zoom=1 every cutout retains the exact original pixel placement.
- const x=w/2-WIDTH*scale/2-(camera.center-.5)*WIDTH*s*camera.zoom*pan+pointer.x*look;
- const y=h/2-HEIGHT*scale/2+pointer.y*look*.16;
+ let x=w/2-WIDTH*scale/2-(camera.center-.5)*WIDTH*s*camera.zoom*pan+pointer.x*look;
+ let y=h/2-HEIGHT*scale/2+pointer.y*look*.16;
+ // Recompose the celestial disc into open sky, clear of the top-left brand.
+ // Disc and halo share the same far-distance projection; clouds stay separate.
+ if(celestial){x+=260*scale;y+=53*scale;}
  return {x,y,scale};
 }
