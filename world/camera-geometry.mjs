@@ -31,5 +31,11 @@ export function layerPose(id,meta,view,camera,pointer,depth=true){
  // Recompose the celestial disc into open sky, clear of the top-left brand.
  // Disc and halo share the same far-distance projection; clouds stay separate.
  if(celestial){x+=260*scale;y+=53*scale;}
+ // Source cutouts end at the original panorama boundary. Keep that outer
+ // edge offscreen; constrain only at the boundary, not throughout the pan.
+ const softenEdge=(value,limit,side)=>{const distance=(value-limit)*side,band=24*s;if(distance<=-band)return value;return limit+side*(-band*Math.exp(-(distance+band)/band));};
+ if(id==='left-tree')x=softenEdge(x,-meta.x*scale,1);
+ if(id==='right-tree')x=softenEdge(x,w-(meta.x+meta.width)*scale,-1);
+ if(id==='left-tree'||id==='right-tree')y=clamp(y,h-(meta.y+meta.height)*scale,-meta.y*scale);
  return {x,y,scale};
 }

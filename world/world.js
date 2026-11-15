@@ -1,5 +1,5 @@
 import {spaces} from '../scene.js';
-import {cycle} from './camera-geometry.mjs?v=ambient-river-v1';
+import {cycle} from './camera-geometry.mjs?v=tree-edge-guard-v1';
 // Canonical panorama coordinates drive HTML navigation and the night renderer.
 // Native input, automatic drift and focus flights share one camera.
 const stage=document.querySelector('.world-window');
