@@ -1,6 +1,7 @@
 import {spaces} from '../scene.js';
-// Night layers retain the canonical panorama coordinates. Native scrolling and
-// the shared camera remain independent of the restrained internal parallax.
+import {cycle} from './camera-geometry.mjs';
+// Canonical panorama coordinates drive HTML navigation and the night renderer.
+// Native input, automatic drift and focus flights share one camera.
 const stage=document.querySelector('.world-window');
 const canvas=document.querySelector('.world-canvas');
 const boxes={passage:[22,46,11,32],tower:[15,4,9,52],aquarium:[41,38,10,32],palace:[77,26,14,48],bridge:[53,55,24,25]};
@@ -10,6 +11,11 @@ document.querySelector('#world-navigation').innerHTML=spaces.map(s=>`<a href="#$
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const camera={center:.5,zoom:1};let cameraFrame=0,panVelocity=0,panTarget=.5,lastCameraTime=0;
 let zoomTrack={from:1,to:1,start:0,duration:5000};
+let drift=false,driftSeconds=0,driftBase={center:.5,zoom:1},landscapePaused=false;
+const motionButton=document.querySelector('.world-motion');
+function motionLabel(){motionButton.textContent=drift?'Pause motion':'Resume motion';motionButton.setAttribute('aria-pressed',String(landscapePaused));motionButton.setAttribute('aria-label',motionButton.textContent+' in the landscape');document.body.dataset.motionPaused=String(landscapePaused);}
+function stopDrift(){if(drift){drift=false;panTarget=camera.center;panVelocity=0;zoomTrack={from:camera.zoom,to:camera.zoom,start:performance.now(),duration:1};motionLabel();}}
+function startDrift(){if(reduced.matches||document.documentElement.dataset.light!=='night'||!document.querySelector('.genesis').hidden)return;landscapePaused=false;drift=true;driftBase={...camera};driftSeconds=0;motionLabel();if(!cameraFrame){lastCameraTime=performance.now();cameraFrame=requestAnimationFrame(cameraStep);}}
 let manualControl=false,lastWheelAt=-Infinity,pointerPosition=null,lastPhysicalMoveAt=0;
 function syncCameraFromScroll(){
  const width=canvas.clientWidth;if(!width)return;
@@ -17,7 +23,7 @@ function syncCameraFromScroll(){
  panTarget=camera.center;
 }
 function takeManualControl(){
- manualControl=true;clearTimeout(focusTimer);clearTimeout(clearTimer);
+ stopDrift();manualControl=true;clearTimeout(focusTimer);clearTimeout(clearTimer);
  cancelAnimationFrame(cameraFrame);cameraFrame=0;panVelocity=0;
  syncCameraFromScroll();
  zoomTrack={from:camera.zoom,to:camera.zoom,start:performance.now(),duration:1};
@@ -37,9 +43,12 @@ function drawCamera(){
  // in the same transform so a slowly zooming engraving does not hop sideways.
  const remainder=stage.scrollLeft-target;
  canvas.style.transform=`translateX(${remainder}px) scale(${camera.zoom})`;
+ const r=canvas.getBoundingClientRect(),v=stage.getBoundingClientRect();
+ window.dispatchEvent(new CustomEvent('alkymia-camera',{detail:{center:(v.width/2-(r.left-v.left))/r.width,zoom:camera.zoom}}));
 }
 function cameraStep(now){
  const dt=Math.min(.05,Math.max(0,(now-lastCameraTime)/1000));lastCameraTime=now;
+ if(drift){if(document.hidden||!document.querySelector('.genesis').hidden||document.documentElement.dataset.light!=='night'){cameraFrame=0;return;}driftSeconds=(driftSeconds+dt)%20;const u=cycle(driftSeconds);camera.center=driftBase.center+u*12/1672;camera.zoom=Math.min(1.08,driftBase.zoom*(1+.025*u));drawCamera();cameraFrame=drift?requestAnimationFrame(cameraStep):0;return;}
  const count=Math.max(1,Math.ceil(dt/(1/120))),h=dt/count;
  // Critically damped horizontal motion keeps velocity when the target changes.
  // Speed and acceleration are bounded in viewport widths, not image widths.
@@ -62,6 +71,7 @@ function cameraStep(now){
  if(!settled||t<1)cameraFrame=requestAnimationFrame(cameraStep);else cameraFrame=0;
 }
 function moveCamera(center,zoom=1,animate=true,duration=5000){
+ stopDrift();
  if(!Number.isFinite(center)||!Number.isFinite(zoom))return;
  center=Math.max(0,Math.min(1,center));zoom=Math.max(1,Math.min(1.08,zoom));panTarget=center;
  if(!animate||reduced.matches){cancelAnimationFrame(cameraFrame);cameraFrame=0;panVelocity=0;camera.center=center;camera.zoom=1;zoomTrack={from:1,to:1,start:0,duration:1};drawCamera();return;}
@@ -131,13 +141,13 @@ const navigation=document.querySelector('#world-navigation');
 let focusTimer,clearTimer;
 function emphasize(id,pan=false){
  if(manualControl||drag)return;
- clearTimeout(clearTimer);
+ stopDrift();clearTimeout(clearTimer);
  const s=spaces.find(s=>s.id===id);if(!s)return;
  if(id==='passage'){release();return;}
  silhouette.setAttribute('d',silhouettes[id]);canvas.dataset.active=id;
  navigation.querySelectorAll('a').forEach(a=>a.classList.toggle('is-emphasized',a.hash==='#'+id));
  links.querySelectorAll('a').forEach(a=>a.classList.toggle('is-emphasized',a.hash==='#'+id));
- if(pan)frameSpace(s,true,1);else if(camera.zoom>1)moveCamera(camera.center,1,true,2200);
+ if(pan)frameSpace(s,true,1.045);else if(camera.zoom>1)moveCamera(camera.center,1,true,2200);
 }
 function release(){
  clearTimeout(focusTimer);clearTimeout(clearTimer);
@@ -156,3 +166,12 @@ for(const a of links.querySelectorAll('a')){
 dialog.addEventListener('close',release);
 
 reduced.addEventListener('change',()=>{if(reduced.matches)moveCamera(camera.center,1,false);});
+
+// Automatic movement shares the same camera as manual navigation.
+motionButton.addEventListener('click',()=>{if(drift||!landscapePaused&&cameraFrame){stopDrift();cancelAnimationFrame(cameraFrame);cameraFrame=0;landscapePaused=true;motionLabel();}else if(landscapePaused){startDrift();}else{startDrift();}});
+const genesis=document.querySelector('.genesis');
+new MutationObserver(()=>{if(genesis.hidden)startDrift();else{stopDrift();landscapePaused=true;motionLabel();}}).observe(genesis,{attributes:true,attributeFilter:['hidden']});
+new MutationObserver(()=>{stopDrift();if(document.documentElement.dataset.light==='night'&&!landscapePaused)startDrift();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-light']});
+document.addEventListener('visibilitychange',()=>{lastCameraTime=performance.now();if(!document.hidden&&drift&&!cameraFrame)cameraFrame=requestAnimationFrame(cameraStep);});
+reduced.addEventListener('change',()=>{if(reduced.matches){stopDrift();landscapePaused=true;motionLabel();}});
+motionLabel();if(genesis.hidden&&!location.hash)startDrift();

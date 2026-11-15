@@ -7,3 +7,14 @@
 .scene-shell>.world-window{height:100%;mask-image:none;-webkit-mask-image:none}
 .scene-shell:after{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(to bottom,var(--surround),transparent 14%,transparent 83%,var(--surround))}
 @media(prefers-reduced-motion:reduce){.depth-scene .depth-plane{transform:none!important}}
+/* The night renderer stays outside the scrolling DOM surface. One camera drives
+   it and the existing HTML navigation/focus silhouettes in canonical coordinates. */
+.night-renderer{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.night-renderer canvas{position:absolute;inset:0;display:block;width:100%;height:100%}
+.night-css-plane{position:absolute;left:0;top:0;transform-origin:0 0}
+.night-css-plane img{position:absolute;max-width:none;display:block}
+.night-renderer[data-backend=gpu] .night-css-plane{visibility:hidden}
+.night-renderer[data-backend=css] canvas{display:none}
+.night-ready .world-canvas>.depth-scene{visibility:hidden}
+.world-canvas>svg:first-child{transition:opacity 1.8s ease-in-out}
+[data-light=night] .night-ready .world-canvas>svg:first-child{opacity:0}
