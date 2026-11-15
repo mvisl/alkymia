@@ -1,5 +1,5 @@
 import {spaces} from '../scene.js';
-import {cycle} from './camera-geometry.mjs';
+import {cycle} from './camera-geometry.mjs?v=world-depth-v2';
 // Canonical panorama coordinates drive HTML navigation and the night renderer.
 // Native input, automatic drift and focus flights share one camera.
 const stage=document.querySelector('.world-window');
@@ -13,7 +13,7 @@ const camera={center:.5,zoom:1};let cameraFrame=0,panVelocity=0,panTarget=.5,las
 let zoomTrack={from:1,to:1,start:0,duration:5000};
 let drift=false,driftSeconds=0,driftBase={center:.5,zoom:1},landscapePaused=false;
 const motionButton=document.querySelector('.world-motion');
-function motionLabel(){motionButton.textContent=drift?'Pause motion':'Resume motion';motionButton.setAttribute('aria-pressed',String(landscapePaused));motionButton.setAttribute('aria-label',motionButton.textContent+' in the landscape');document.body.dataset.motionPaused=String(landscapePaused);}
+function motionLabel(){motionButton.textContent=landscapePaused?'Resume motion':'Pause motion';motionButton.setAttribute('aria-pressed',String(landscapePaused));motionButton.setAttribute('aria-label',motionButton.textContent+' in the landscape');document.body.dataset.motionPaused=String(landscapePaused);}
 function stopDrift(){if(drift){drift=false;panTarget=camera.center;panVelocity=0;zoomTrack={from:camera.zoom,to:camera.zoom,start:performance.now(),duration:1};motionLabel();}}
 function startDrift(){if(reduced.matches||document.documentElement.dataset.light!=='night'||!document.querySelector('.genesis').hidden)return;landscapePaused=false;drift=true;driftBase={...camera};driftSeconds=0;motionLabel();if(!cameraFrame){lastCameraTime=performance.now();cameraFrame=requestAnimationFrame(cameraStep);}}
 let manualControl=false,lastWheelAt=-Infinity,pointerPosition=null,lastPhysicalMoveAt=0;
@@ -168,7 +168,7 @@ dialog.addEventListener('close',release);
 reduced.addEventListener('change',()=>{if(reduced.matches)moveCamera(camera.center,1,false);});
 
 // Automatic movement shares the same camera as manual navigation.
-motionButton.addEventListener('click',()=>{if(drift||!landscapePaused&&cameraFrame){stopDrift();cancelAnimationFrame(cameraFrame);cameraFrame=0;landscapePaused=true;motionLabel();}else if(landscapePaused){startDrift();}else{startDrift();}});
+motionButton.addEventListener('click',()=>{if(!landscapePaused){stopDrift();cancelAnimationFrame(cameraFrame);cameraFrame=0;landscapePaused=true;motionLabel();}else{landscapePaused=false;motionLabel();startDrift();}});
 const genesis=document.querySelector('.genesis');
 new MutationObserver(()=>{if(genesis.hidden)startDrift();else{stopDrift();landscapePaused=true;motionLabel();}}).observe(genesis,{attributes:true,attributeFilter:['hidden']});
 new MutationObserver(()=>{stopDrift();if(document.documentElement.dataset.light==='night'&&!landscapePaused)startDrift();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-light']});

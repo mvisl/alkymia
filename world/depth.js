@@ -1,22 +1,22 @@
 import {Application,Container,Sprite,Texture} from '../vendor/pixi-8.22.0/pixi.min.mjs';
-import {WIDTH,HEIGHT,layerPose} from './camera-geometry.mjs';
+import {WIDTH,HEIGHT,layerPose} from './camera-geometry.mjs?v=world-depth-v2';
 const stage=document.querySelector('.world-window'),shell=document.querySelector('.scene-shell'),canvas=document.querySelector('.world-canvas'),intro=document.querySelector('.genesis');
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const host=document.createElement('div');host.className='night-renderer light-layer light-night';host.setAttribute('aria-hidden','true');shell.prepend(host);
-const names=['base','city','landmarks','left-bank','right-bank','left-tree','right-tree'];
-let ready=false,app=null,gpuReady=false,raf=0,last=0,view={width:stage.clientWidth,height:stage.clientHeight},camera={center:.5,zoom:1},pointer={x:0,y:0},target={x:0,y:0};
+const names=['sky-backdrop','moon-halo','moon','sky-clouds','distant-mountains','city-separated','river','landmarks','left-bank','right-bank','left-tree','right-tree'];
+let ready=false,app=null,gpuReady=false,raf=0,last=0,view={width:stage.clientWidth,height:stage.clientHeight},camera={center:.5,zoom:1},pointer={x:0,y:0},target={x:0,y:0},cloudSeconds=0;
 const css={},gpu={};let map;
 function canMove(){return !document.hidden&&intro.hidden&&!reduced.matches&&document.body.dataset.motionPaused!=='true'&&document.documentElement.dataset.light==='night'&&!document.querySelector('dialog').open;}
 function schedule(){if(ready&&!raf&&!document.hidden)raf=requestAnimationFrame(frame);}
 function frame(now){raf=0;const dt=Math.min(.05,Math.max(0,(now-(last||now))/1000));last=now;
- if(canMove()){const e=1-Math.exp(-dt/.45);pointer.x+=(target.x-pointer.x)*e;pointer.y+=(target.y-pointer.y)*e;}
+ if(canMove()){cloudSeconds=(cloudSeconds+dt)%251.3274;const e=1-Math.exp(-dt/.45);pointer.x+=(target.x-pointer.x)*e;pointer.y+=(target.y-pointer.y)*e;}
  else if(reduced.matches)pointer={x:0,y:0};
- draw();if(canMove()&&Math.abs(pointer.x-target.x)+Math.abs(pointer.y-target.y)>.0005)schedule();else last=0;
+ draw();if(canMove())schedule();else last=0;
 }
 function draw(){if(!ready)return;
- for(const name of names){const p=layerPose(name,map[name],view,camera,pointer,!reduced.matches);if(gpuReady){gpu[name].position.set(p.x,p.y);gpu[name].scale.set(p.scale);}else css[name].style.transform=`matrix(${p.scale},0,0,${p.scale},${p.x},${p.y})`;}
+ for(const name of names){const p=layerPose(name,map[name],view,camera,pointer,!reduced.matches);if(name==='sky-clouds'){p.x+=(96+Math.sin(cloudSeconds*.025)*48)*p.scale;p.y+=Math.sin(cloudSeconds*.05)*2*p.scale;}if(gpuReady){gpu[name].position.set(p.x,p.y);gpu[name].scale.set(p.scale);}else css[name].style.transform=`matrix(${p.scale},0,0,${p.scale},${p.x},${p.y})`;}
  if(gpuReady){try{app.render();}catch(error){console.warn('Night renderer switched to CSS.',error);gpuReady=false;host.dataset.backend='css';draw();}}
- host.dataset.center=camera.center.toFixed(6);host.dataset.zoom=camera.zoom.toFixed(6);host.dataset.frames=String(Number(host.dataset.frames||0)+1);
+ host.dataset.cloudSeconds=cloudSeconds.toFixed(3);host.dataset.center=camera.center.toFixed(6);host.dataset.zoom=camera.zoom.toFixed(6);host.dataset.frames=String(Number(host.dataset.frames||0)+1);
 }
 function sync(){const next={width:stage.clientWidth,height:stage.clientHeight},resized=next.width!==view.width||next.height!==view.height;view=next;const r=canvas.getBoundingClientRect(),v=stage.getBoundingClientRect(),z=Number(canvas.dataset.zoom)||1;if(r.width)camera={center:(v.width/2-(r.left-v.left))/r.width,zoom:z};if(resized&&app?.renderer)app.renderer.resize(view.width,view.height);schedule();}
 window.addEventListener('alkymia-camera',e=>{camera=e.detail;schedule();});
@@ -27,9 +27,10 @@ new ResizeObserver(sync).observe(stage);
 new MutationObserver(()=>{last=0;schedule();}).observe(intro,{attributes:true,attributeFilter:['hidden']});
 new MutationObserver(()=>{last=0;schedule();}).observe(document.body,{attributes:true,attributeFilter:['data-motion-paused']});
 new MutationObserver(()=>{last=0;schedule();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-light']});
+document.querySelector('dialog').addEventListener('close',()=>{last=0;schedule();});
 reduced.addEventListener('change',()=>{target=pointer={x:0,y:0};schedule();});document.addEventListener('visibilitychange',()=>{last=0;schedule();});
 try{
- map=await (await fetch('night-layers.json')).json();const images={};await Promise.all(names.map(async name=>{const img=new Image();img.src=map[name].url;await img.decode();images[name]=img;const m=map[name],el=document.createElement('div');el.className='night-css-plane';img.alt='';img.draggable=false;img.style.cssText=`left:${m.x}px;top:${m.y}px;width:${m.width}px;height:${m.height}px`;el.append(img);host.append(el);css[name]=el;}));
+ map=await (await fetch('night-layers.json?v=world-depth-v2')).json();const images={};await Promise.all(names.map(async name=>{const img=new Image();img.src=map[name].url;await img.decode();images[name]=img;const m=map[name],el=document.createElement('div');el.className='night-css-plane';img.alt='';img.draggable=false;img.style.cssText=`left:${m.x}px;top:${m.y}px;width:${m.width}px;height:${m.height}px`;el.append(img);host.append(el);css[name]=el;}));
  // Promise completion order must never determine visual stacking.
  for(const name of names)host.append(css[name]);
  try{app=new Application();await app.init({width:view.width,height:view.height,preference:'webgl',autoStart:false,sharedTicker:false,antialias:false,autoDensity:true,resolution:Math.min(devicePixelRatio||1,2),background:0x0e1518});app.stage.eventMode='none';host.append(app.canvas);

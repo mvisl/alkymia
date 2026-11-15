@@ -1,20 +1,4 @@
 {
-  "base": {
-    "x": 0.0,
-    "y": 0.0,
-    "width": 1672.0,
-    "height": 435.0,
-    "bytes": 3023318,
-    "url": "layers/base.webp"
-  },
-  "city": {
-    "x": 0.0,
-    "y": 0.0,
-    "width": 1672.0,
-    "height": 435.0,
-    "bytes": 1522224,
-    "url": "layers/city.webp"
-  },
   "landmarks": {
     "x": 0.0,
     "y": 0.0,
@@ -54,5 +38,61 @@
     "height": 435.0,
     "bytes": 461334,
     "url": "layers/frame-right-tree.webp"
+  },
+  "distant-mountains": {
+    "x": 0.0,
+    "y": 86.5,
+    "width": 1672.0,
+    "height": 348.5,
+    "bytes": 2198506,
+    "url": "layers/distant-mountains.webp"
+  },
+  "city-separated": {
+    "x": 0.0,
+    "y": 0.0,
+    "width": 1672.0,
+    "height": 399.0,
+    "bytes": 1330682,
+    "url": "layers/city-separated.webp"
+  },
+  "river": {
+    "x": 555.0,
+    "y": 361.0,
+    "width": 880.0,
+    "height": 74.0,
+    "bytes": 280964,
+    "url": "layers/river.webp"
+  },
+  "sky-clouds": {
+    "x": -160.0,
+    "y": -32.0,
+    "width": 1992.0,
+    "height": 499.0,
+    "bytes": 3777060,
+    "url": "layers/sky-clouds.webp"
+  },
+  "sky-backdrop": {
+    "x": 0.0,
+    "y": 0.0,
+    "width": 1672.0,
+    "height": 435.0,
+    "bytes": 42,
+    "url": "layers/sky-backdrop.webp"
+  },
+  "moon": {
+    "x": 489.0,
+    "y": 6.0,
+    "width": 62.5,
+    "height": 62.5,
+    "bytes": 20220,
+    "url": "layers/moon.webp"
+  },
+  "moon-halo": {
+    "x": 448.5,
+    "y": 0.0,
+    "width": 143.5,
+    "height": 107.0,
+    "bytes": 4230,
+    "url": "layers/moon-halo.webp"
   }
 }
