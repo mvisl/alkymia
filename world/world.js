@@ -145,8 +145,8 @@ function release(){
  clearTimer=setTimeout(()=>{delete canvas.dataset.active;document.querySelectorAll('.is-emphasized').forEach(e=>e.classList.remove('is-emphasized'));moveCamera(panTarget,1,true,2200);},180);
 }
 for(const a of navigation.querySelectorAll('a')){
- a.addEventListener('pointerenter',e=>{if(e.pointerType!=='mouse'||manualControl||drag||performance.now()-lastPhysicalMoveAt>150)return;clearTimeout(focusTimer);clearTimeout(clearTimer);focusTimer=setTimeout(()=>emphasize(a.hash.slice(1),true),140);});
- a.addEventListener('pointerleave',()=>{if(performance.now()-lastPhysicalMoveAt<=150)release();});
+ a.addEventListener('pointerenter',e=>{if(e.pointerType!=='mouse'||manualControl||drag)return;clearTimeout(focusTimer);clearTimeout(clearTimer);focusTimer=setTimeout(()=>emphasize(a.hash.slice(1),true),140);});
+ a.addEventListener('pointerleave',release);
  a.addEventListener('focus',()=>emphasize(a.hash.slice(1),true));a.addEventListener('blur',release);
 }
 for(const a of links.querySelectorAll('a')){
