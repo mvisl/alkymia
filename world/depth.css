@@ -1,0 +1,10 @@
+/* Precut images: masks and resampling happen during preparation, not every frame. */
+.world-canvas>.depth-scene{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.depth-scene .depth-plane{position:absolute;inset:0;transform-origin:50% 65%;will-change:transform}
+.depth-plane img{position:absolute;display:block;max-width:none;user-select:none;pointer-events:none}
+.depth-scene [data-plane=left-tree]{transform-origin:0% 97%}
+.depth-scene [data-plane=right-tree]{transform-origin:100% 83%}
+.depth-scene [data-plane=water]{animation:river-breath 11s ease-in-out infinite alternate;transform-origin:60% 93%;opacity:.6}
+@keyframes river-breath{from{transform:translate3d(-.055%,0,0) scaleX(1.0003)}to{transform:translate3d(.055%,-.12%,0) scaleX(1.001)}}
+.motion-paused [data-plane=water]{animation-play-state:paused}
+@media(prefers-reduced-motion:reduce){.depth-scene .depth-plane{will-change:auto;transform:none!important}.depth-scene [data-plane=water]{animation:none;opacity:0}}
