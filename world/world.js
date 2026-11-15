@@ -1,7 +1,6 @@
 import {spaces} from '../scene.js';
-import {cycle} from './camera-geometry.mjs?v=tree-edge-guard-v1';
 // Canonical panorama coordinates drive HTML navigation and the night renderer.
-// Native input, automatic drift and focus flights share one camera.
+// Native input and focus flights share one camera; ambient depth is decorative.
 const stage=document.querySelector('.world-window');
 const canvas=document.querySelector('.world-canvas');
 const boxes={passage:[22,46,11,32],tower:[15,4,9,52],aquarium:[41,38,10,32],palace:[77,26,14,48],bridge:[53,55,24,25]};
@@ -10,12 +9,11 @@ links.innerHTML=spaces.filter(s=>s.id!=='passage').map(s=>{const [x,y,w,h]=boxes
 document.querySelector('#world-navigation').innerHTML=spaces.map(s=>`<a href="#${s.id}"><span>${s.label}</span><small>${s.name}</small></a>`).join('');
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const camera={center:.5,zoom:1};let cameraFrame=0,panVelocity=0,panTarget=.5,lastCameraTime=0;
-let zoomTrack={from:1,to:1,start:0,duration:5000};
-let drift=false,driftSeconds=0,driftBase={center:.5,zoom:1},landscapePaused=false;
+let zoomTarget=1,zoomVelocity=0;
+let landscapePaused=false;
 const motionButton=document.querySelector('.world-motion');
 function motionLabel(){motionButton.textContent=landscapePaused?'Resume motion':'Pause motion';motionButton.setAttribute('aria-pressed',String(landscapePaused));motionButton.setAttribute('aria-label',motionButton.textContent+' in the landscape');document.body.dataset.motionPaused=String(landscapePaused);}
-function stopDrift(){if(drift){drift=false;panTarget=camera.center;panVelocity=0;zoomTrack={from:camera.zoom,to:camera.zoom,start:performance.now(),duration:1};motionLabel();}}
-function startDrift(){if(reduced.matches||document.documentElement.dataset.light!=='night'||!document.querySelector('.genesis').hidden)return;landscapePaused=false;drift=true;driftBase={...camera};driftSeconds=0;motionLabel();if(!cameraFrame){lastCameraTime=performance.now();cameraFrame=requestAnimationFrame(cameraStep);}}
+function returnToWideView(){if(reduced.matches||document.documentElement.dataset.light!=='night'||!document.querySelector('.genesis').hidden)return;landscapePaused=false;motionLabel();moveCamera(camera.center,1,true);}
 let manualControl=false,lastWheelAt=-Infinity,pointerPosition=null,lastPhysicalMoveAt=0;
 function syncCameraFromScroll(){
  const width=canvas.clientWidth;if(!width)return;
@@ -23,10 +21,10 @@ function syncCameraFromScroll(){
  panTarget=camera.center;
 }
 function takeManualControl(){
- stopDrift();manualControl=true;clearTimeout(focusTimer);clearTimeout(clearTimer);
- cancelAnimationFrame(cameraFrame);cameraFrame=0;panVelocity=0;
+ manualControl=true;clearTimeout(focusTimer);clearTimeout(clearTimer);
+ cancelAnimationFrame(cameraFrame);cameraFrame=0;panVelocity=0;zoomVelocity=0;
  syncCameraFromScroll();
- zoomTrack={from:camera.zoom,to:camera.zoom,start:performance.now(),duration:1};
+ zoomTarget=camera.zoom;
  delete canvas.dataset.active;document.querySelectorAll('.is-emphasized').forEach(e=>e.classList.remove('is-emphasized'));
 }
 
@@ -48,7 +46,6 @@ function drawCamera(){
 }
 function cameraStep(now){
  const dt=Math.min(.05,Math.max(0,(now-lastCameraTime)/1000));lastCameraTime=now;
- if(drift){if(document.hidden||!document.querySelector('.genesis').hidden||document.documentElement.dataset.light!=='night'){cameraFrame=0;return;}driftSeconds=(driftSeconds+dt)%20;const u=cycle(driftSeconds);camera.center=driftBase.center+u*12/1672;camera.zoom=Math.min(1.08,driftBase.zoom*(1+.025*u));drawCamera();cameraFrame=drift?requestAnimationFrame(cameraStep):0;return;}
  const count=Math.max(1,Math.ceil(dt/(1/120))),h=dt/count;
  // Critically damped horizontal motion keeps velocity when the target changes.
  // Speed and acceleration are bounded in viewport widths, not image widths.
@@ -58,24 +55,24 @@ function cameraStep(now){
   panVelocity=Math.max(-maxSpeed,Math.min(maxSpeed,panVelocity+acceleration*h));
   camera.center+=panVelocity*h;
  }
- const t=Math.min(1,(now-zoomTrack.start)/zoomTrack.duration);
- let ease;
- if(zoomTrack.to>zoomTrack.from){
-  // Zero initial velocity, ~69% of the approach after 1s, then a long quiet tail.
-  const x=12*t;ease=(1-(1+x)*Math.exp(-x))/(1-13*Math.exp(-12));
- }else ease=t*t*t*(t*(t*6-15)+10);
- camera.zoom=zoomTrack.from+(zoomTrack.to-zoomTrack.from)*ease;
+ // One damped zoom trajectory retains velocity across retargets. Switching
+ // sections never restarts an ease from zero or briefly targets the wide view.
+ for(let n=0;n<count;n++){
+  zoomVelocity+=(5.76*(zoomTarget-camera.zoom)-4.8*zoomVelocity)*h;
+  camera.zoom+=zoomVelocity*h;
+ }
+ const zoomSettled=Math.abs(zoomTarget-camera.zoom)<.000005&&Math.abs(zoomVelocity)<.000005;
+ if(zoomSettled){camera.zoom=zoomTarget;zoomVelocity=0;}
  const settled=Math.abs(panTarget-camera.center)*canvas.clientWidth<.12&&Math.abs(panVelocity)*canvas.clientWidth<.15;
  if(settled){camera.center=panTarget;panVelocity=0;}
  drawCamera();
- if(!settled||t<1)cameraFrame=requestAnimationFrame(cameraStep);else cameraFrame=0;
+ if(!settled||!zoomSettled)cameraFrame=requestAnimationFrame(cameraStep);else cameraFrame=0;
 }
-function moveCamera(center,zoom=1,animate=true,duration=5000){
- stopDrift();
+function moveCamera(center,zoom=1,animate=true){
  if(!Number.isFinite(center)||!Number.isFinite(zoom))return;
- center=Math.max(0,Math.min(1,center));zoom=Math.max(1,Math.min(1.08,zoom));panTarget=center;
- if(!animate||reduced.matches){cancelAnimationFrame(cameraFrame);cameraFrame=0;panVelocity=0;camera.center=center;camera.zoom=1;zoomTrack={from:1,to:1,start:0,duration:1};drawCamera();return;}
- if(zoom!==zoomTrack.to)zoomTrack={from:camera.zoom,to:zoom,start:performance.now(),duration};
+ center=Math.max(0,Math.min(1,center));zoom=Math.max(1,Math.min(1.14,zoom));panTarget=center;
+ if(!animate||reduced.matches){cancelAnimationFrame(cameraFrame);cameraFrame=0;panVelocity=0;zoomVelocity=0;camera.center=center;camera.zoom=1;zoomTarget=1;drawCamera();return;}
+ zoomTarget=zoom;
  if(!cameraFrame){lastCameraTime=performance.now();cameraFrame=requestAnimationFrame(cameraStep);}
 }
 function frameSpace(s,animate=true,zoom=1){
@@ -141,18 +138,18 @@ const navigation=document.querySelector('#world-navigation');
 let focusTimer,clearTimer;
 function emphasize(id,pan=false){
  if(manualControl||drag)return;
- stopDrift();clearTimeout(clearTimer);
+ clearTimeout(clearTimer);
  const s=spaces.find(s=>s.id===id);if(!s)return;
  if(id==='passage'){release();return;}
  silhouette.setAttribute('d',silhouettes[id]);canvas.dataset.active=id;
  navigation.querySelectorAll('a').forEach(a=>a.classList.toggle('is-emphasized',a.hash==='#'+id));
  links.querySelectorAll('a').forEach(a=>a.classList.toggle('is-emphasized',a.hash==='#'+id));
- if(pan)frameSpace(s,true,1.045);else if(camera.zoom>1)moveCamera(camera.center,1,true,2200);
+ if(pan)frameSpace(s,true,1.09);else moveCamera(panTarget,1.09,true);
 }
 function release(){
  clearTimeout(focusTimer);clearTimeout(clearTimer);
  if(manualControl||drag)return;
- clearTimer=setTimeout(()=>{delete canvas.dataset.active;document.querySelectorAll('.is-emphasized').forEach(e=>e.classList.remove('is-emphasized'));moveCamera(panTarget,1,true,2200);},180);
+ clearTimer=setTimeout(()=>{delete canvas.dataset.active;document.querySelectorAll('.is-emphasized').forEach(e=>e.classList.remove('is-emphasized'));moveCamera(panTarget,1,true);},320);
 }
 for(const a of navigation.querySelectorAll('a')){
  a.addEventListener('pointerenter',e=>{if(e.pointerType!=='mouse'||manualControl||drag)return;clearTimeout(focusTimer);clearTimeout(clearTimer);focusTimer=setTimeout(()=>emphasize(a.hash.slice(1),true),140);});
@@ -167,11 +164,11 @@ dialog.addEventListener('close',release);
 
 reduced.addEventListener('change',()=>{if(reduced.matches)moveCamera(camera.center,1,false);});
 
-// Automatic movement shares the same camera as manual navigation.
-motionButton.addEventListener('click',()=>{if(!landscapePaused){stopDrift();cancelAnimationFrame(cameraFrame);cameraFrame=0;landscapePaused=true;motionLabel();}else{landscapePaused=false;motionLabel();startDrift();}});
+// Pause freezes both the focus camera and decorative depth movement.
+motionButton.addEventListener('click',()=>{if(!landscapePaused){cancelAnimationFrame(cameraFrame);cameraFrame=0;panVelocity=0;zoomVelocity=0;landscapePaused=true;motionLabel();}else{landscapePaused=false;motionLabel();returnToWideView();}});
 const genesis=document.querySelector('.genesis');
-new MutationObserver(()=>{if(genesis.hidden)startDrift();else{stopDrift();landscapePaused=true;motionLabel();}}).observe(genesis,{attributes:true,attributeFilter:['hidden']});
-new MutationObserver(()=>{stopDrift();if(document.documentElement.dataset.light==='night'&&!landscapePaused)startDrift();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-light']});
-document.addEventListener('visibilitychange',()=>{lastCameraTime=performance.now();if(!document.hidden&&drift&&!cameraFrame)cameraFrame=requestAnimationFrame(cameraStep);});
-reduced.addEventListener('change',()=>{if(reduced.matches){stopDrift();landscapePaused=true;motionLabel();}});
-motionLabel();if(genesis.hidden&&!location.hash)startDrift();
+new MutationObserver(()=>{if(genesis.hidden)returnToWideView();else{cancelAnimationFrame(cameraFrame);cameraFrame=0;panVelocity=0;zoomVelocity=0;landscapePaused=true;motionLabel();}}).observe(genesis,{attributes:true,attributeFilter:['hidden']});
+new MutationObserver(()=>{if(document.documentElement.dataset.light==='night'&&!landscapePaused)returnToWideView();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-light']});
+document.addEventListener('visibilitychange',()=>{lastCameraTime=performance.now();});
+reduced.addEventListener('change',()=>{if(reduced.matches){landscapePaused=true;motionLabel();}});
+motionLabel();if(genesis.hidden&&!location.hash)returnToWideView();

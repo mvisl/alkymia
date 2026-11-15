@@ -1,27 +1,27 @@
 {
   "landmarks": {
-    "x": 0.0,
-    "y": 0.0,
-    "width": 1605.0,
-    "height": 435.0,
-    "bytes": 861082,
-    "url": "layers/landmarks.webp"
+    "x": 183.0,
+    "y": 45.5,
+    "width": 1422.0,
+    "height": 317.0,
+    "bytes": 675844,
+    "url": "layers/landmarks-contour-v3.webp"
   },
   "left-bank": {
-    "x": 100.0,
-    "y": 4.0,
-    "width": 1275.0,
-    "height": 431.0,
-    "bytes": 945868,
-    "url": "layers/left-bank.webp"
+    "x": 104.5,
+    "y": 170.0,
+    "width": 1270.5,
+    "height": 218.5,
+    "bytes": 275760,
+    "url": "layers/left-bank-contour-v3.webp"
   },
   "right-bank": {
-    "x": 314.0,
-    "y": 5.0,
-    "width": 1282.0,
-    "height": 430.0,
-    "bytes": 501324,
-    "url": "layers/right-bank.webp"
+    "x": 1028.0,
+    "y": 187.0,
+    "width": 568.0,
+    "height": 183.5,
+    "bytes": 86864,
+    "url": "layers/right-bank-contour-v3.webp"
   },
   "left-tree": {
     "x": 0.0,
@@ -36,32 +36,32 @@
     "y": 0.0,
     "width": 502.0,
     "height": 435.0,
-    "bytes": 461334,
-    "url": "layers/frame-right-tree.webp"
+    "bytes": 558528,
+    "url": "layers/right-tree-continuous-v2.webp"
   },
   "distant-mountains": {
     "x": 0.0,
-    "y": 86.5,
+    "y": 84.5,
     "width": 1672.0,
-    "height": 348.5,
-    "bytes": 2198506,
-    "url": "layers/distant-mountains.webp"
+    "height": 350.5,
+    "bytes": 2190816,
+    "url": "layers/distant-mountains-depth-clean.webp"
   },
   "city-separated": {
-    "x": 0.0,
-    "y": 0.0,
-    "width": 1672.0,
-    "height": 399.0,
-    "bytes": 1330682,
-    "url": "layers/city-separated.webp"
+    "x": 183.0,
+    "y": 45.5,
+    "width": 1422.5,
+    "height": 333.5,
+    "bytes": 1001698,
+    "url": "layers/city-separated-contour-v3.webp"
   },
   "river": {
     "x": 555.0,
     "y": 361.0,
-    "width": 880.0,
+    "width": 783.5,
     "height": 74.0,
-    "bytes": 280964,
-    "url": "layers/river.webp"
+    "bytes": 250504,
+    "url": "layers/river-depth-clean.webp"
   },
   "sky-clouds": {
     "x": -160.0,
@@ -94,5 +94,21 @@
     "height": 107.0,
     "bytes": 4230,
     "url": "layers/moon-halo.webp"
+  },
+  "island": {
+    "x": 64.5,
+    "y": 210.0,
+    "width": 708.0,
+    "height": 203.5,
+    "bytes": 423560,
+    "url": "layers/island-original.webp"
+  },
+  "ground-backdrop": {
+    "x": 0.0,
+    "y": 285.5,
+    "width": 1672.0,
+    "height": 149.5,
+    "bytes": 994208,
+    "url": "layers/ground-backdrop-v1.webp"
   }
 }

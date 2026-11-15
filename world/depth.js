@@ -1,10 +1,10 @@
 import {Application,Container,Sprite,Texture,MeshPlane} from '../vendor/pixi-8.22.0/pixi.min.mjs';
-import {WIDTH,HEIGHT,layerPose} from './camera-geometry.mjs?v=tree-edge-guard-v1';
-import {ambientCamera,ripplePoint} from './ambient-motion.mjs?v=tree-edge-guard-v1';
+import {WIDTH,HEIGHT,layerPose} from './camera-geometry.mjs?v=contour-depth-v5';
+import {ambientCamera,ripplePoint} from './ambient-motion.mjs?v=contour-depth-v5';
 const stage=document.querySelector('.world-window'),shell=document.querySelector('.scene-shell'),canvas=document.querySelector('.world-canvas'),intro=document.querySelector('.genesis');
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const host=document.createElement('div');host.className='night-renderer light-layer light-night';host.setAttribute('aria-hidden','true');shell.prepend(host);
-const names=['sky-backdrop','moon-halo','moon','sky-clouds','distant-mountains','city-separated','river','landmarks','left-bank','right-bank','left-tree','right-tree'];
+const names=['sky-backdrop','moon-halo','moon','sky-clouds','distant-mountains','ground-backdrop','city-separated','river','landmarks','island','left-bank','right-bank','left-tree','right-tree'];
 let ready=false,app=null,gpuReady=false,raf=0,last=0,view={width:stage.clientWidth,height:stage.clientHeight},camera={center:.5,zoom:1},pointer={x:0,y:0},target={x:0,y:0},cloudSeconds=0;
 const css={},gpu={};let map,waterMesh,waterRest;
 function canMove(){return !document.hidden&&intro.hidden&&!reduced.matches&&document.body.dataset.motionPaused!=='true'&&document.documentElement.dataset.light==='night'&&!document.querySelector('dialog').open;}
@@ -32,7 +32,7 @@ new MutationObserver(()=>{last=0;schedule();}).observe(document.documentElement,
 document.querySelector('dialog').addEventListener('close',()=>{last=0;schedule();});
 reduced.addEventListener('change',()=>{target=pointer={x:0,y:0};schedule();});document.addEventListener('visibilitychange',()=>{last=0;schedule();});
 try{
- map=await (await fetch('night-layers.json?v=tree-edge-guard-v1')).json();const images={};await Promise.all(names.map(async name=>{const img=new Image();img.src=map[name].url;await img.decode();images[name]=img;const m=map[name],el=document.createElement('div');el.className='night-css-plane';img.alt='';img.draggable=false;img.style.cssText=`left:${m.x}px;top:${m.y}px;width:${m.width}px;height:${m.height}px`;el.append(img);host.append(el);css[name]=el;}));
+ map=await (await fetch('night-layers.json?v=contour-depth-v5')).json();const images={};await Promise.all(names.map(async name=>{const img=new Image();img.src=map[name].url;await img.decode();images[name]=img;const m=map[name],el=document.createElement('div');el.className='night-css-plane';img.alt='';img.draggable=false;img.style.cssText=`left:${m.x}px;top:${m.y}px;width:${m.width}px;height:${m.height}px`;el.append(img);host.append(el);css[name]=el;}));
  // Promise completion order must never determine visual stacking.
  for(const name of names)host.append(css[name]);
  try{app=new Application();await app.init({width:view.width,height:view.height,preference:'webgl',autoStart:false,sharedTicker:false,antialias:false,autoDensity:true,resolution:Math.min(devicePixelRatio||1,2),background:0x0e1518});app.stage.eventMode='none';host.append(app.canvas);
