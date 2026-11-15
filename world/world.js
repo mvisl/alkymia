@@ -77,7 +77,7 @@ function moveCamera(center,zoom=1,animate=true){
 }
 function frameSpace(s,animate=true,zoom=1){
  if(s.id==='passage')return;
- const box=boxes[s.id];moveCamera((box[0]+box[2]/2)/100,zoom,animate);
+ const box=boxes[s.id],focus=s.id==='bridge'?.575:(box[0]+box[2]/2)/100;moveCamera(focus,zoom,animate);
 }
 const dialog=document.querySelector('#space-dialog');let opener=null;
 const art=s=>`<svg class="space-art" viewBox="${s.crop.join(' ')}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${['day','sunset','night'].map(mode=>`<image class="light-layer light-${mode}" href="../assets/world-${mode}.png" width="1672" height="941" preserveAspectRatio="none"/>`).join('')}</svg>`;

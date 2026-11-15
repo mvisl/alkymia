@@ -36,8 +36,15 @@ export function layerPose(id,meta,view,camera,pointer,depth=true){
  // Source cutouts end at the original panorama boundary. Keep that outer
  // edge offscreen; constrain only at the boundary, not throughout the pan.
  const softenEdge=(value,limit,side)=>{const distance=(value-limit)*side,band=24*s;if(distance<=-band)return value;return limit+side*(-band*Math.exp(-(distance+band)/band));};
- if(id==='left-tree')x=softenEdge(x,-meta.x*scale,1);
- if(id==='right-tree')x=softenEdge(x,w-(meta.x+meta.width)*scale,-1);
- if(id==='left-tree'||id==='right-tree')y=clamp(y,h-(meta.y+meta.height)*scale,-meta.y*scale);
+ if(depth&&(id==='left-tree'||id==='right-tree')){
+  // Guard the cut edge at the wide-view pose, then expand away from the
+  // viewport centre. Guarding after zoom pinned the outer edge and made
+  // the silhouette grow inward, opposite to a camera moving into the scene.
+  let baseX=w/2-WIDTH*s/2-(camera.center-.5)*WIDTH*s*pan+pointer.x*look;
+  baseX=id==='left-tree'?softenEdge(baseX,-meta.x*s,1):softenEdge(baseX,w-(meta.x+meta.width)*s,-1);
+  const magnification=1+z*d.zoom;
+  x=w/2+(baseX-w/2)*magnification;
+  y=h/2-h/2*magnification;
+ }
  return {x,y,scale};
 }

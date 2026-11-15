@@ -1,11 +1,11 @@
 {
   "landmarks": {
-    "x": 183.0,
+    "x": 129.0,
     "y": 45.5,
-    "width": 1422.0,
+    "width": 1476.0,
     "height": 317.0,
-    "bytes": 675844,
-    "url": "layers/landmarks-contour-v3.webp"
+    "bytes": 703838,
+    "url": "layers/landmarks-solid-v6.webp"
   },
   "left-bank": {
     "x": 104.5,
@@ -36,8 +36,8 @@
     "y": 0.0,
     "width": 502.0,
     "height": 435.0,
-    "bytes": 558528,
-    "url": "layers/right-tree-continuous-v2.webp"
+    "bytes": 557160,
+    "url": "layers/right-tree-solid-v6.webp"
   },
   "distant-mountains": {
     "x": 0.0,
@@ -48,12 +48,12 @@
     "url": "layers/distant-mountains-depth-clean.webp"
   },
   "city-separated": {
-    "x": 183.0,
+    "x": 64.5,
     "y": 45.5,
-    "width": 1422.5,
+    "width": 1541.0,
     "height": 333.5,
-    "bytes": 1001698,
-    "url": "layers/city-separated-contour-v3.webp"
+    "bytes": 1127774,
+    "url": "layers/city-solid-v6.webp"
   },
   "river": {
     "x": 555.0,
@@ -96,12 +96,12 @@
     "url": "layers/moon-halo.webp"
   },
   "island": {
-    "x": 64.5,
+    "x": 113.0,
     "y": 210.0,
-    "width": 708.0,
+    "width": 659.5,
     "height": 203.5,
-    "bytes": 423560,
-    "url": "layers/island-original.webp"
+    "bytes": 335848,
+    "url": "layers/island-verified-v6.webp"
   },
   "ground-backdrop": {
     "x": 0.0,
