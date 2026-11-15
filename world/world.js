@@ -10,7 +10,7 @@ document.querySelector('#world-navigation').innerHTML=spaces.map(s=>`<a href="#$
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const camera={center:.5,zoom:1};let cameraFrame=0,panVelocity=0,panTarget=.5,lastCameraTime=0;
 let zoomTrack={from:1,to:1,start:0,duration:5000};
-let manualControl=false,lastWheelAt=-Infinity,pointerPosition=null;
+let manualControl=false,lastWheelAt=-Infinity,pointerPosition=null,lastPhysicalMoveAt=0;
 function syncCameraFromScroll(){
  const width=canvas.clientWidth;if(!width)return;
  camera.center=(stage.scrollLeft+stage.clientWidth/2-(1-camera.zoom)*width/2)/(width*camera.zoom);
@@ -26,9 +26,17 @@ function takeManualControl(){
 
 function drawCamera(){
  const width=canvas.clientWidth;
+ if(!Number.isFinite(width)||width<=0||!Number.isFinite(camera.zoom)||!Number.isFinite(camera.center))return;
  canvas.style.transform=`scale(${camera.zoom})`;
  canvas.dataset.zoom=String(camera.zoom);
- stage.scrollLeft=camera.center*width*camera.zoom+(1-camera.zoom)*width/2-stage.clientWidth/2;
+ const desired=camera.center*width*camera.zoom+(1-camera.zoom)*width/2-stage.clientWidth/2;
+ const max=Number.isFinite(stage.scrollWidth)?Math.max(0,stage.scrollWidth-stage.clientWidth):Infinity;
+ const target=Math.max(0,Math.min(max,desired));
+ stage.scrollLeft=target;
+ // Native scrolling rounds to device pixels. Correct the fractional remainder
+ // in the same transform so a slowly zooming engraving does not hop sideways.
+ const remainder=stage.scrollLeft-target;
+ canvas.style.transform=`translateX(${remainder}px) scale(${camera.zoom})`;
 }
 function cameraStep(now){
  const dt=Math.min(.05,Math.max(0,(now-lastCameraTime)/1000));lastCameraTime=now;
@@ -54,7 +62,8 @@ function cameraStep(now){
  if(!settled||t<1)cameraFrame=requestAnimationFrame(cameraStep);else cameraFrame=0;
 }
 function moveCamera(center,zoom=1,animate=true,duration=5000){
- center=Math.max(0,Math.min(1,center));panTarget=center;
+ if(!Number.isFinite(center)||!Number.isFinite(zoom))return;
+ center=Math.max(0,Math.min(1,center));zoom=Math.max(1,Math.min(1.08,zoom));panTarget=center;
  if(!animate||reduced.matches){cancelAnimationFrame(cameraFrame);cameraFrame=0;panVelocity=0;camera.center=center;camera.zoom=1;zoomTrack={from:1,to:1,start:0,duration:1};drawCamera();return;}
  if(zoom!==zoomTrack.to)zoomTrack={from:camera.zoom,to:zoom,start:performance.now(),duration};
  if(!cameraFrame){lastCameraTime=performance.now();cameraFrame=requestAnimationFrame(cameraStep);}
@@ -84,7 +93,9 @@ stage.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Home','End','
 window.addEventListener('keydown',e=>{if(e.key==='Tab')manualControl=false;});
 function notePointerIntent(e){
  if(e.pointerType!=='mouse')return;
- const moved=pointerPosition&&Math.hypot(e.clientX-pointerPosition.x,e.clientY-pointerPosition.y)>4;
+ const distance=pointerPosition?Math.hypot(e.clientX-pointerPosition.x,e.clientY-pointerPosition.y):Infinity;
+ if(distance>.25)lastPhysicalMoveAt=performance.now();
+ const moved=pointerPosition&&distance>4;
  if(!drag&&manualControl&&moved&&performance.now()-lastWheelAt>350)manualControl=false;
  if(drag||!manualControl||!pointerPosition)pointerPosition={x:e.clientX,y:e.clientY};
 }
@@ -126,7 +137,7 @@ function emphasize(id,pan=false){
  silhouette.setAttribute('d',silhouettes[id]);canvas.dataset.active=id;
  navigation.querySelectorAll('a').forEach(a=>a.classList.toggle('is-emphasized',a.hash==='#'+id));
  links.querySelectorAll('a').forEach(a=>a.classList.toggle('is-emphasized',a.hash==='#'+id));
- if(pan)frameSpace(s,true,1.08);else if(camera.zoom>1)moveCamera(camera.center,1,true,2200);
+ if(pan)frameSpace(s,true,1);else if(camera.zoom>1)moveCamera(camera.center,1,true,2200);
 }
 function release(){
  clearTimeout(focusTimer);clearTimeout(clearTimer);
@@ -134,13 +145,13 @@ function release(){
  clearTimer=setTimeout(()=>{delete canvas.dataset.active;document.querySelectorAll('.is-emphasized').forEach(e=>e.classList.remove('is-emphasized'));moveCamera(panTarget,1,true,2200);},180);
 }
 for(const a of navigation.querySelectorAll('a')){
- a.addEventListener('pointerenter',e=>{if(e.pointerType!=='mouse'||manualControl||drag)return;clearTimeout(focusTimer);clearTimeout(clearTimer);focusTimer=setTimeout(()=>emphasize(a.hash.slice(1),true),140);});
- a.addEventListener('pointerleave',release);
+ a.addEventListener('pointerenter',e=>{if(e.pointerType!=='mouse'||manualControl||drag||performance.now()-lastPhysicalMoveAt>150)return;clearTimeout(focusTimer);clearTimeout(clearTimer);focusTimer=setTimeout(()=>emphasize(a.hash.slice(1),true),140);});
+ a.addEventListener('pointerleave',()=>{if(performance.now()-lastPhysicalMoveAt<=150)release();});
  a.addEventListener('focus',()=>emphasize(a.hash.slice(1),true));a.addEventListener('blur',release);
 }
 for(const a of links.querySelectorAll('a')){
- a.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')emphasize(a.hash.slice(1));});
- a.addEventListener('pointerleave',release);a.addEventListener('focus',()=>emphasize(a.hash.slice(1),true));a.addEventListener('blur',release);
+ a.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'&&performance.now()-lastPhysicalMoveAt<=150)emphasize(a.hash.slice(1));});
+ a.addEventListener('pointerleave',()=>{if(performance.now()-lastPhysicalMoveAt<=150)release();});a.addEventListener('focus',()=>emphasize(a.hash.slice(1),true));a.addEventListener('blur',release);
 }
 dialog.addEventListener('close',release);
 

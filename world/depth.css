@@ -1,10 +1,9 @@
-/* Precut images: masks and resampling happen during preparation, not every frame. */
+/* Flatten static cutouts; avoid panorama-sized promoted surfaces under a mask. */
 .world-canvas>.depth-scene{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.depth-scene .depth-plane{position:absolute;inset:0;transform-origin:50% 65%;will-change:transform}
+.depth-scene .depth-plane{position:absolute;inset:0;transform-origin:50% 65%;will-change:auto}
 .depth-plane img{position:absolute;display:block;max-width:none;user-select:none;pointer-events:none}
-.depth-scene [data-plane=left-tree]{transform-origin:0% 97%}
-.depth-scene [data-plane=right-tree]{transform-origin:100% 83%}
-.depth-scene [data-plane=water]{animation:river-breath 11s ease-in-out infinite alternate;transform-origin:60% 93%;opacity:.6}
-@keyframes river-breath{from{transform:translate3d(-.055%,0,0) scaleX(1.0003)}to{transform:translate3d(.055%,-.12%,0) scaleX(1.001)}}
-.motion-paused [data-plane=water]{animation-play-state:paused}
-@media(prefers-reduced-motion:reduce){.depth-scene .depth-plane{will-change:auto;transform:none!important}.depth-scene [data-plane=water]{animation:none;opacity:0}}
+.depth-scene [data-plane=water],.depth-scene [data-plane=sky]{display:none}
+.scene-shell{position:relative;min-height:0;overflow:hidden}
+.scene-shell>.world-window{height:100%;mask-image:none;-webkit-mask-image:none}
+.scene-shell:after{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(to bottom,var(--surround),transparent 14%,transparent 83%,var(--surround))}
+@media(prefers-reduced-motion:reduce){.depth-scene .depth-plane{transform:none!important}}
