@@ -1,6 +1,6 @@
 import {spaces} from '../scene.js';
-// One canonical flat plane today. Future sky/architecture/water layers share its
-// coordinates; no invented depth transforms or independently regenerated art.
+// Night layers retain the canonical panorama coordinates. Native scrolling and
+// the shared camera remain independent of the restrained internal parallax.
 const stage=document.querySelector('.world-window');
 const canvas=document.querySelector('.world-canvas');
 const boxes={passage:[22,46,11,32],tower:[15,4,9,52],aquarium:[41,38,10,32],palace:[77,26,14,48],bridge:[53,55,24,25]};
@@ -27,6 +27,7 @@ function takeManualControl(){
 function drawCamera(){
  const width=canvas.clientWidth;
  canvas.style.transform=`scale(${camera.zoom})`;
+ canvas.dataset.zoom=String(camera.zoom);
  stage.scrollLeft=camera.center*width*camera.zoom+(1-camera.zoom)*width/2-stage.clientWidth/2;
 }
 function cameraStep(now){

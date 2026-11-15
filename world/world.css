@@ -31,3 +31,11 @@
 .back-study{opacity:.5;transition:opacity .25s}
 .back-study:hover,.back-study:focus-visible{opacity:1}
 @media(min-width:651px){.back-study{position:fixed;top:24px;right:126px;height:32px;padding:0 10px;display:flex;align-items:center}}
+
+/* Approved night depth study, within the existing scroll/zoom camera. */
+.world-canvas>.depth-scene{position:absolute;inset:0;pointer-events:none}
+.depth-scene .water-plane{filter:url(#water-ripple)}
+.world-canvas{will-change:auto}
+@media(prefers-reduced-motion:reduce){.depth-scene .water-plane{filter:none}}
+
+.world-motion{position:fixed;bottom:16px;right:4%;z-index:3;padding:6px 0;background:none;border:0;color:var(--quiet);font:8px/1.5 Arial,sans-serif;letter-spacing:.07em;cursor:pointer;opacity:.55}.world-motion:hover,.world-motion:focus-visible{opacity:1}@media(prefers-reduced-motion:reduce){.world-motion{display:none}}
