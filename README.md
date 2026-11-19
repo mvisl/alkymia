@@ -36,3 +36,5 @@ The original view responds to both width and aspect ratio: ≥1001px wide / ≥3
 The original desktop header no longer repeats the five destination links; the illustrated destinations remain primary navigation. Mobile retains its menu drawer for access while scrolling.
 
 The unsupported Passage marker has also been removed from the original panorama; About remains accessible from its illustrated destination and mobile menu. Nonessential lighting/study footer labels are removed; the lighting control itself announces its selected state.
+
+The immersive opening, panorama and sections now live at the site root. The former `/world/` address redirects to the root and preserves section hashes.

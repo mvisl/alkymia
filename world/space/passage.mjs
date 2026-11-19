@@ -1,6 +1,6 @@
 /** Fullscreen section page. No public route, framework, Pixi, or global CSS dependency. */
 export const PASSAGE_PAGE_ID='passage';
-export const PASSAGE_BUILD='2026-11-19-carved-interior-v6';
+export const PASSAGE_BUILD='2026-11-19-carved-interior-v6-root';
 let active=null,pending=null;
 export function mountPassagePage(options={}){
  if(active)return Promise.resolve(active);

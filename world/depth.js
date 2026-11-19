@@ -33,7 +33,7 @@ new MutationObserver(()=>{last=0;schedule();}).observe(document.documentElement,
 document.querySelector('dialog').addEventListener('close',()=>{last=0;schedule();});
 reduced.addEventListener('change',()=>{target=pointer={x:0,y:0};schedule();});document.addEventListener('visibilitychange',()=>{last=0;schedule();});
 try{
- map=await (await fetch('night-layers.json?v=solid-masks-v6')).json();const images={};await Promise.all(names.map(async name=>{const img=new Image();img.src=map[name].url;await img.decode();images[name]=img;const m=map[name],el=document.createElement('div');el.className='night-css-plane';img.alt='';img.draggable=false;img.style.cssText=`left:${m.x}px;top:${m.y}px;width:${m.width}px;height:${m.height}px`;el.append(img);host.append(el);css[name]=el;}));
+ map=await (await fetch(new URL('night-layers.json?v=solid-masks-v6',import.meta.url))).json();const images={};await Promise.all(names.map(async name=>{const img=new Image();img.src=new URL(map[name].url,import.meta.url);await img.decode();images[name]=img;const m=map[name],el=document.createElement('div');el.className='night-css-plane';img.alt='';img.draggable=false;img.style.cssText=`left:${m.x}px;top:${m.y}px;width:${m.width}px;height:${m.height}px`;el.append(img);host.append(el);css[name]=el;}));
  // Promise completion order must never determine visual stacking.
  for(const name of names)host.append(css[name]);
  try{app=new Application();await app.init({width:view.width,height:view.height,preference:'webgl',autoStart:false,sharedTicker:false,antialias:false,autoDensity:true,resolution:Math.min(devicePixelRatio||1,2),background:0x0e1518});app.stage.eventMode='none';host.append(app.canvas);

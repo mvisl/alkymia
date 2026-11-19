@@ -81,7 +81,7 @@ function frameSpace(s,animate=true,zoom=1){
  const box=boxes[s.id],focus=s.id==='bridge'?.575:(box[0]+box[2]/2)/100;moveCamera(focus,zoom,animate);
 }
 const dialog=document.querySelector('#space-dialog');let opener=null;
-const art=s=>`<svg class="space-art" viewBox="${s.crop.join(' ')}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${['day','sunset','night'].map(mode=>`<image class="light-layer light-${mode}" href="../assets/world-${mode}.png" width="1672" height="941" preserveAspectRatio="none"/>`).join('')}</svg>`;
+const art=s=>`<svg class="space-art" viewBox="${s.crop.join(' ')}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${['day','sunset','night'].map(mode=>`<image class="light-layer light-${mode}" href="assets/world-${mode}.png" width="1672" height="941" preserveAspectRatio="none"/>`).join('')}</svg>`;
 let passagePage=null,routeGeneration=0,passagePending=false;
 const sectionVeil=document.createElement('div');sectionVeil.className='section-veil';sectionVeil.setAttribute('aria-hidden','true');document.body.append(sectionVeil);
 function veil(covered){sectionVeil.classList.toggle('is-covered',covered);}
@@ -89,7 +89,7 @@ async function openPassage(generation){
  if(passagePage||passagePending)return;passagePending=true;
  const previousPaused=landscapePaused;takeManualControl();landscapePaused=true;motionLabel();veil(true);
  try{
-  const [{mountPassagePage}]=await Promise.all([import('./space/passage.mjs?v=gallery-v11'),new Promise(resolve=>setTimeout(resolve,reduced.matches?0:350))]);
+  const [{mountPassagePage}]=await Promise.all([import('./space/passage.mjs?v=root-v12'),new Promise(resolve=>setTimeout(resolve,reduced.matches?0:350))]);
   if(generation!==routeGeneration||location.hash!=='#passage'){landscapePaused=previousPaused;motionLabel();return;}
   if(dialog.open)dialog.close();
   const mounted=await mountPassagePage({onExit({reason}){
@@ -98,7 +98,6 @@ async function openPassage(generation){
    // The old scene is preserved, never reset or flown back to its start.
    veil(true);requestAnimationFrame(()=>requestAnimationFrame(()=>veil(false)));
    if(reason!=='route-change'&&location.hash==='#passage'){
-    if(reason!=='pagehide'&&matchMedia('(max-width:760px)').matches){location.replace(new URL('../#explore',location.href).href);return;}
     history.replaceState(null,'',location.pathname);
     document.querySelectorAll('#world-navigation a').forEach(a=>a.removeAttribute('aria-current'));
    }
@@ -154,7 +153,7 @@ window.addEventListener('pointermove',e=>{if(!drag)return;const delta=e.clientX-
 function finishDrag(e){pointerPosition={x:e.clientX,y:e.clientY};drag=null;stage.classList.remove('is-dragging');}
 window.addEventListener('pointerup',finishDrag);window.addEventListener('pointercancel',finishDrag);
 stage.addEventListener('click',e=>{if(dragged){e.preventDefault();e.stopPropagation();dragged=false;}},true);stage.addEventListener('dragstart',e=>e.preventDefault());
-let request=0;document.querySelectorAll('[data-light-choice]').forEach(button=>button.addEventListener('click',async()=>{const id=++request,mode=button.dataset.lightChoice,img=new Image();img.src=`../assets/world-${mode}.png`;try{await img.decode();}catch{return;}if(id!==request)return;document.documentElement.dataset.light=mode;document.querySelectorAll('[data-light-choice]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));document.querySelector('meta[name="theme-color"]').content={night:'#101619',sunset:'#1a1a1e',day:'#f5ebdb'}[mode];}));
+let request=0;document.querySelectorAll('[data-light-choice]').forEach(button=>button.addEventListener('click',async()=>{const id=++request,mode=button.dataset.lightChoice,img=new Image();img.src=`assets/world-${mode}.png`;try{await img.decode();}catch{return;}if(id!==request)return;document.documentElement.dataset.light=mode;document.querySelectorAll('[data-light-choice]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));document.querySelector('meta[name="theme-color"]').content={night:'#101619',sunset:'#1a1a1e',day:'#f5ebdb'}[mode];}));
 // Keep the source plane proportional to the actual grid space, not a fixed
 // height or the full browser height. Preserve the camera center on resize.
 function layoutScene(){
