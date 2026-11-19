@@ -89,7 +89,7 @@ async function openPassage(generation){
  if(passagePage||passagePending)return;passagePending=true;
  const previousPaused=landscapePaused;takeManualControl();landscapePaused=true;motionLabel();veil(true);
  try{
-  const [{mountPassagePage}]=await Promise.all([import('./space/passage.mjs?v=inside-v9'),new Promise(resolve=>setTimeout(resolve,reduced.matches?0:350))]);
+  const [{mountPassagePage}]=await Promise.all([import('./space/passage.mjs?v=gallery-v11'),new Promise(resolve=>setTimeout(resolve,reduced.matches?0:350))]);
   if(generation!==routeGeneration||location.hash!=='#passage'){landscapePaused=previousPaused;motionLabel();return;}
   if(dialog.open)dialog.close();
   const mounted=await mountPassagePage({onExit({reason}){

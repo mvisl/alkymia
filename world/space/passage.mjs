@@ -1,6 +1,6 @@
 /** Fullscreen section page. No public route, framework, Pixi, or global CSS dependency. */
 export const PASSAGE_PAGE_ID='passage';
-export const PASSAGE_BUILD='2026-11-19-carved-interior-v4';
+export const PASSAGE_BUILD='2026-11-19-carved-interior-v6';
 let active=null,pending=null;
 export function mountPassagePage(options={}){
  if(active)return Promise.resolve(active);
@@ -63,32 +63,147 @@ async function start(){
  const resources=[],materials=[];
  const grainTexture=await new T.TextureLoader().loadAsync(new URL('engraving-grain.png',base).href);grainTexture.wrapS=grainTexture.wrapT=T.RepeatWrapping;grainTexture.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());if(disposed||reading){grainTexture.dispose();renderer.dispose();return;}resources.push(grainTexture);
  const center=z=>Math.sin(z*.035)*1.05+Math.sin(z*.078)*.28;
- function section(a,z){const open=T.MathUtils.smoothstep(-z,108,150);const breadth=5.4+.35*Math.sin(z*.055)+2.8*Math.exp(-Math.pow((z+28)/14,2))+1.3*Math.exp(-Math.pow((z+91)/13,2))+open*3.8;const height=4.3+.3*Math.sin(z*.07)+2.5*Math.exp(-Math.pow((z+57)/15,2))+open*2.7;const c=Math.cos(a),sn=Math.sin(a);const ripple=1+.075*Math.sin(a*3+.3*Math.sin(z*.03))+.026*Math.sin(a*5-z*.018);return new T.Vector3(center(z)+Math.sign(c)*Math.pow(Math.abs(c),.78)*breadth*ripple,1.1+Math.sign(sn)*Math.pow(Math.abs(sn),.84)*height*ripple,z);}
- const uniform={uEye:{value:new T.Vector3()},uFog:{value:new T.Color(0x0b1114)},uGrain:{value:grainTexture},uLight:{value:new T.Vector3()},uFarLight:{value:new T.Vector3(-5,7,-183)},uNormalSign:{value:-1},uFloor:{value:0},uBare:{value:0},uDetail:{value:0}};
- const material=new T.ShaderMaterial({side:T.BackSide,uniforms:uniform,vertexShader:`varying vec3 vP;varying vec3 vN;varying vec2 vUv;varying float vDepth;void main(){vP=position;vN=normal;vUv=uv;vec4 p=modelViewMatrix*vec4(position,1.);vDepth=-p.z;gl_Position=projectionMatrix*p;}`,fragmentShader:`precision highp float;uniform vec3 uEye;uniform vec3 uFog;uniform sampler2D uGrain;uniform vec3 uLight;uniform vec3 uFarLight;uniform float uNormalSign;uniform float uFloor;uniform float uBare;uniform float uDetail;varying vec3 vP;varying vec3 vN;varying vec2 vUv;varying float vDepth;
- float stroke(float p,float w){float aa=max(fwidth(p),.001);float id=floor(p);float rnd=fract(sin(id*91.3)*43758.5);float along=vP.z*.6+vUv.x*12.;float drift=.16*sin(along*1.7+rnd*12.)+.08*sin(along*4.9+rnd*21.);float pressure=w*(.55+.9*rnd);float d=abs(fract(p+drift)-.5);float h=1.-smoothstep(pressure-aa,pressure+aa,d);float lift=smoothstep(.05,.45,sin(along*.9+rnd*9.)*.5+.5);return mix(h*lift,w*1.4,smoothstep(.28,.4,aa));}
+ const lampStations=[[-1,-17],[1,-52],[-1,-86],[1,-139]];
+ function dimensions(z){
+   const widening=T.MathUtils.smoothstep(-z,108,150);
+   return {
+     width:4.35+1.65*Math.exp(-((z+28)**2)/196)+1.1*Math.exp(-((z+91)**2)/169)+widening*2.1,
+     rise:4.1+2.2*Math.exp(-((z+57)**2)/225)+widening*1.6
+   };
+ }
+ function section(a,z){
+   const {width,rise}=dimensions(z);
+   const c=Math.cos(a),sn=Math.sin(a);
+   const side=c<0?-1:1;
+   let recess=0;
+   for(const [wall,station] of lampStations){
+     if(wall===side)recess+=1.05*Math.exp(-((z-station)**4)/7)*Math.pow(Math.abs(c),16);
+   }
+   const x=sn>=0?c:c*Math.min(1.8,1/Math.max(Math.abs(c),.01));
+   return new T.Vector3(center(z)+x*(width+recess),.65+sn*(sn>=0?rise:3.4),z);
+ }
+ const uniform={uLamps:{value:lampStations.map(([side,z])=>new T.Vector3(center(z)+side*(dimensions(z).width-.12),.95,z))},uEye:{value:new T.Vector3()},uFog:{value:new T.Color(0x0b1114)},uGrain:{value:grainTexture},uLight:{value:new T.Vector3()},uFarLight:{value:new T.Vector3(-5,7,-183)},uNormalSign:{value:-1},uFloor:{value:0},uBare:{value:0},uDetail:{value:0}};
+ const material=new T.ShaderMaterial({side:T.BackSide,uniforms:uniform,vertexShader:`varying vec3 vP;varying vec3 vN;varying vec2 vUv;varying float vDepth;void main(){vP=position;vN=normal;vUv=uv;vec4 p=modelViewMatrix*vec4(position,1.);vDepth=-p.z;gl_Position=projectionMatrix*p;}`,fragmentShader:`precision highp float;uniform vec3 uEye;uniform vec3 uLamps[4];uniform vec3 uFog;uniform sampler2D uGrain;uniform vec3 uLight;uniform vec3 uFarLight;uniform float uNormalSign;uniform float uFloor;uniform float uBare;uniform float uDetail;varying vec3 vP;varying vec3 vN;varying vec2 vUv;varying float vDepth;
  void main(){vec3 n=normalize(vN)*uNormalSign;vec3 toLight=uLight-vP;float dist=length(toLight);float key=max(0.,dot(n,normalize(toLight)));float attenuation=pow(clamp(1.-dist/39.,0.,1.),.8);float nearGate=smoothstep(10.,26.,vDepth);float localLight=exp(-pow((vP.z-uLight.z)/9.,2.));float middle=.14*exp(-pow((vDepth-21.)/14.,2.));vec3 toFar=uFarLight-vP;float distant=max(0.,dot(n,normalize(toFar)))*exp(-length(toFar)*.045);float rake=.13*pow(max(0.,dot(n,normalize(vec3(-.6,.7,.3)))),3.)*(1.-smoothstep(10.,24.,vDepth));float rim=uDetail*.28*pow(1.-abs(dot(n,normalize(uEye-vP))),2.);float L=clamp(key*attenuation*1.75*nearGate*localLight+middle*(1.+key*.65)+distant*.7+rake+rim,0.,1.);
- float drift=.07*sin(vUv.x*79.+vP.z*.7)+.035*sin(vP.z*2.7);float p=mix(vUv.x*120.,vP.x*3.,uFloor)+vP.z*2.27+drift;float h=stroke(p,.13);float cross=stroke(mix(vUv.x*147.,vP.x*3.67,uFloor)-vP.z*2.7-drift,.12);
- float tone=mix(.018,.20,smoothstep(.09,.15,L));tone=mix(tone,.57,smoothstep(.32,.39,L));tone=mix(tone,.94,smoothstep(.61,.70,L));
- tone=mix(tone,.02+L*.8,uBare);vec3 ink=vec3(.0045,.008,.009);vec3 paper=vec3(.65,.64,.55);vec3 slate=mix(ink,paper,tone);float single=smoothstep(.11,.17,L)*(1.-smoothstep(.61,.69,L));float crossed=smoothstep(.10,.16,L)*(1.-smoothstep(.32,.40,L));vec2 scanUV=vec2(mix(vUv.x*18.,vP.x*.4,uFloor),vP.z*.28);float scanInk=1.-smoothstep(.22,.85,texture2D(uGrain,scanUV).r);slate=mix(slate,ink,max(scanInk*single*.68,h*crossed*.12)*(1.-uBare));slate*=.975+.025*texture2D(uGrain,vec2(vUv.x*55.,vP.z*.7)).r;
- float fog=1.-exp(-pow(max(vDepth,0.)*.018,1.4));gl_FragColor=vec4(mix(slate,uFog,fog*.87),1.);\n#include <colorspace_fragment>\n}`});materials.push(material);
+
+ // Light pools are anchored to the stone and alternate sides along the route.
+ vec3 lamps[4];
+ lamps[0]=uLamps[0];
+ lamps[1]=uLamps[1];
+ lamps[2]=uLamps[2];
+ lamps[3]=uLamps[3];
+ float pool=0.;
+ for(int i=0;i<4;i++){
+   vec3 ray=lamps[i]-vP;
+   float r=length(ray);
+   pool+=max(0.,dot(n,ray/max(r,.01)))*exp(-r*.18);
+ }
+ L=clamp(.48*L*smoothstep(1.,19.,vDepth)+1.35*pool+.012,0.,1.);
+ vec2 stoneUV=vec2(mix(vUv.x*56.,vP.x*1.3,uFloor),vP.z*.83);
+ float grain=texture2D(uGrain,stoneUV).r;
+ float cloud=texture2D(uGrain,stoneUV*.24+vec2(.31,.17)).r;
+ float wall=pow(abs(cos(vUv.x*6.2831853)),6.)*(1.-uFloor)*(1.-uDetail);
+ float surface=mix(vP.y,vP.x,uFloor);
+ float course=(surface+.014*sin(vP.z*.81)+.01*sin(vP.z*2.12+surface*3.))*mix(1.24,.59,uFloor);
+ float row=floor(course+.5);
+ float block=vP.z*mix(.32,.47,uFloor)+mod(row,2.)*.5+.014*sin(surface*5.+row);
+ float bed=abs(fract(course)-.5);
+ float edge=min(bed,abs(fract(block+.5)-.5));
+ float aa=max(fwidth(course),fwidth(vP.z)*.47);
+ float joints=(1.-smoothstep(.017,.045+aa,edge))*(1.-smoothstep(.13,.36,aa));
+ float masonry=max(wall,uFloor)*(1.-uBare);
+ float variation=fract(sin(row*27.1+floor(block+.5)*53.7)*43758.54);
+ float stratum=.5+.5*sin(vP.y*8.+vP.z*.19+cloud*1.4);
+ vec3 ink=vec3(.007,.005,.004);
+ vec3 limestone=mix(vec3(.42,.31,.21),vec3(.51,.39,.27),cloud);
+ float tone=(.025+.98*pow(L,1.15))*mix(1.,.86+.26*variation,masonry)*(.97+.03*stratum);
+ vec3 stone=mix(ink,limestone,tone);
+ float hatch=(1.-smoothstep(.18,.83,grain))*smoothstep(.07,.23,L);
+ stone=mix(stone,ink,clamp(hatch*.13+joints*masonry*.35,0.,.85));
+ float lip=exp(-pow((edge-.065)*48.,2.))*(1.-smoothstep(.09,.25,aa));
+ stone+=limestone*lip*masonry*L*.12;
+ float fog=1.-exp(-pow(max(vDepth,0.)*.018,1.4));
+ vec3 atmosphere=mix(uFog,vec3(.069,.043,.025),clamp(pool*1.8,0.,.7));
+ gl_FragColor=vec4(mix(stone,atmosphere,fog*.83),1.);
+#include <colorspace_fragment>\n}`});materials.push(material);
  const around=mobile?64:96,depth=mobile?144:220,vertices=[],uvs=[],indices=[];
  for(let j=0;j<=depth;j++){const z=12-j*182/depth;for(let i=0;i<=around;i++){const a=i/around*Math.PI*2,p=section(a,z);vertices.push(p.x,p.y,p.z);uvs.push(i/around,j/depth);}}
  for(let j=0;j<depth;j++)for(let i=0;i<around;i++){const a=j*(around+1)+i,b=a+around+1;indices.push(a,b,a+1,b,b+1,a+1);}
  const shell=new T.BufferGeometry();shell.setAttribute('position',new T.Float32BufferAttribute(vertices,3));shell.setAttribute('uv',new T.Float32BufferAttribute(uvs,2));shell.setIndex(indices);shell.computeVertexNormals();resources.push(shell);scene.add(new T.Mesh(shell,material));
  // A continuous grounded path follows the same interior, with ragged engraved edges.
- const floorGeo=new T.PlaneGeometry(8.9,182,40,220);floorGeo.rotateX(-Math.PI/2);floorGeo.translate(0,-2.45,-79);
+ const floorGeo=new T.PlaneGeometry(16,182,40,220);floorGeo.rotateX(-Math.PI/2);floorGeo.translate(0,-2.45,-79);
  const fp=floorGeo.attributes.position;for(let i=0;i<fp.count;i++){const z=fp.getZ(i),x=fp.getX(i);fp.setX(i,x+center(z));fp.setY(i,-2.45+.035*Math.sin(z*.7+x*2)+.025*Math.sin(x*5.));}floorGeo.computeVertexNormals();resources.push(floorGeo);
  const floorMat=material.clone();floorMat.side=T.DoubleSide;floorMat.uniforms={...uniform,uNormalSign:{value:1},uFloor:{value:1}};materials.push(floorMat);scene.add(new T.Mesh(floorGeo,floorMat));
- // Thirteen substantial carved ribs produce real foreground/middle-distance occlusion.
- const ribMaterial=material.clone();ribMaterial.side=T.FrontSide;ribMaterial.uniforms={...uniform,uNormalSign:{value:1},uFloor:{value:0},uDetail:{value:1}};materials.push(ribMaterial);
- const edgeMaterial=new T.MeshBasicMaterial({color:0x0a1417,fog:true});materials.push(edgeMaterial);let ribCount=0;
- for(let i=0;i<13;i++){const z=8-i*13.4+.8*Math.sin(i*1.7),pts=[],back=[];const gap=.16+.11*Math.sin(i*.8),start=.11*Math.sin(i*.7);for(let k=0;k<=100;k++){const a=start+gap+(Math.PI*2-gap*2)*k/100,p=section(a,z+.6*Math.sin(a*2+i*.8)),q=p.clone();p.x=center(p.z)+(p.x-center(p.z))*.978;p.y=1.1+(p.y-1.1)*.978;q.x=center(q.z)+(q.x-center(q.z))*1.008;q.y=1.1+(q.y-1.1)*1.008;pts.push(p);back.push(q);}const radius=.25+.05*Math.sin(i*.9);const g=new T.TubeGeometry(new T.CatmullRomCurve3(pts),mobile?70:110,radius,8,false);resources.push(g);scene.add(new T.Mesh(g,ribMaterial));const bg=new T.TubeGeometry(new T.CatmullRomCurve3(back),mobile?64:96,radius*.95,5,false);resources.push(bg);scene.add(new T.Mesh(bg,edgeMaterial));ribCount++;}
+ // A band of separate voussoirs rests on piers with stepped bases and capitals.
+ const ribMaterial=material.clone();
+ ribMaterial.side=T.FrontSide;
+ ribMaterial.uniforms={...uniform,uNormalSign:{value:1},uDetail:{value:1}};
+ materials.push(ribMaterial);
+ const lanternMaterial=new T.MeshBasicMaterial({color:0xffce83});
+ materials.push(lanternMaterial);
+
+ function addMesh(geometry,mat){
+   resources.push(geometry);
+   scene.add(new T.Mesh(geometry,mat));
+ }
+ function block(x,y,z,width,height,depth,mat=ribMaterial){
+   const geometry=new T.BoxGeometry(width,height,depth);
+   geometry.translate(x,y,z);
+   addMesh(geometry,mat);
+ }
+ function archBand(z,rise,width,thickness,depth){
+   const vertices=[],indices=[];
+   const count=17,steps=4;
+   for(let stone=0;stone<count;stone++){
+     const first=vertices.length/3;
+     for(let j=0;j<=steps;j++){
+       const a=Math.PI*(stone+(j/steps)*.96+.02)/count;
+       for(const [inset,d] of [[0,0],[thickness,0],[thickness,depth],[0,depth]]){
+         vertices.push(center(z)+Math.cos(a)*(width-inset),.65+Math.sin(a)*(rise-inset),z+d-depth/2);
+       }
+     }
+     for(let j=0;j<steps;j++)for(let k=0;k<4;k++){
+       const a=first+j*4+k,b=first+j*4+(k+1)%4;
+       indices.push(a,b,a+4,b,b+4,a+4);
+     }
+     const last=first+steps*4;
+     indices.push(first,first+2,first+1,first,first+3,first+2,last,last+1,last+2,last,last+2,last+3);
+   }
+   const geometry=new T.BufferGeometry();
+   geometry.setAttribute('position',new T.Float32BufferAttribute(vertices,3));
+   geometry.setIndex(indices);
+   const flat=geometry.toNonIndexed();
+   geometry.dispose();
+   flat.computeVertexNormals();
+   addMesh(flat,ribMaterial);
+ }
+ const archStations=[-8,-30,-48,-68,-96,-114,-137,-155];
+ const ribCount=archStations.length;
+ for(const z of archStations){
+   const {width,rise}=dimensions(z);
+   const thickness=z===-48||z===-137?.68:.43;
+   archBand(z,rise+.2,width+.12,thickness,1.12);
+   archBand(z+.61,rise+.01,width-.07,thickness*.58,.24);
+   for(const side of [-1,1]){
+     const x=center(z)+side*(width-.13);
+     block(x,-.91,z,thickness+.28,3.12,1.14);
+     block(x,-2.24,z,thickness+.73,.42,1.55);
+     block(x,.49,z,thickness+.55,.30,1.45);
+   }
+ }
+ for(const [side,z] of lampStations){
+   const x=center(z)+side*(dimensions(z).width+.23);
+   block(x,-.02,z,.94,.25,1.75);
+   block(x,.63,z,.27,1.03,.43);
+   block(x,.65,z,.31,.45,.25,lanternMaterial);
+   block(x,1.02,z,.43,.13,.46);
+   for(const edge of [-.15,.15])block(x-side*.16,.65,z+edge,.06,.58,.046);
+ }
  let seed=55109;function rand(){seed=seed*16807%2147483647;return(seed-1)/2147483646;}
  const count=mobile?550:1400,points=[];
  for(let i=0;i<count;i++){const z=8-rand()*170,a=rand()*Math.PI*2,r=i%4===0?.4+rand()*.4:.97;const p=section(a,z);points.push(center(z)+(p.x-center(z))*r,1.1+(p.y-1.1)*r,z);}
  const dustGeo=new T.BufferGeometry();dustGeo.setAttribute('position',new T.Float32BufferAttribute(points,3));resources.push(dustGeo);
- const dustMat=new T.PointsMaterial({size:.043,sizeAttenuation:true,color:0xb9baa5,transparent:true,opacity:.48,depthWrite:false,fog:true});materials.push(dustMat);const dust=new T.Points(dustGeo,dustMat);scene.add(dust);
+ const dustMat=new T.PointsMaterial({size:.043,sizeAttenuation:true,color:0xb5a180,transparent:true,opacity:.27,depthWrite:false,fog:true});materials.push(dustMat);const dust=new T.Points(dustGeo,dustMat);scene.add(dust);
  // The passage opens into a real wider chamber; no billboard, halo or white blob.
  const roomGeo=new T.SphereGeometry(1,mobile?48:72,mobile?32:48,0,Math.PI*2,.23,Math.PI-.23);roomGeo.scale(17,11,24);roomGeo.translate(center(-183),2,-183);resources.push(roomGeo);const roomMat=material.clone();roomMat.uniforms={...uniform,uNormalSign:{value:-1},uFloor:{value:1},uBare:{value:1}};materials.push(roomMat);scene.add(new T.Mesh(roomGeo,roomMat));
  let raf=0,last=performance.now(),time=0,samples=[],pointer={x:0,y:0},look={x:0,y:0},closed=false;
@@ -99,7 +214,7 @@ async function start(){
  camera.position.set(center(z),.50,z);target.set(center(z-16)+look.x*.42,.55+look.y*.20,z-16);camera.lookAt(target);camera.rotation.z=0;uniform.uEye.value.copy(camera.position);uniform.uLight.value.set(center(z-34)+1.05,4.4,z-34);
  if(!paused)dust.position.y=Math.sin(time*.09)*.018;renderer.render(scene,camera);
  if(!paused&&samples.length<240&&raw>0)samples.push(raw);const mean=samples.length?samples.reduce((a,b)=>a+b,0)/samples.length:0;
- const m={renderer:'Three.js r180 / WebGL2',design:'carved-interior-v4',progress:+progress.toFixed(4),camera:camera.position.toArray().map(n=>+n.toFixed(3)),roll:+camera.rotation.z.toFixed(6),frames:samples.length,meanFrameMs:+mean.toFixed(2),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,vaultRibs:ribCount,opaqueDisplayPlanes:0,particles:count,width:innerWidth,height:innerHeight,dpr:renderer.getPixelRatio(),paused,time:+time.toFixed(3)};canvas.dataset.metrics=host.dataset.metrics=JSON.stringify(m);
+ const m={renderer:'Three.js r180 / WebGL2',design:'carved-interior-v6',progress:+progress.toFixed(4),camera:camera.position.toArray().map(n=>+n.toFixed(3)),roll:+camera.rotation.z.toFixed(6),frames:samples.length,meanFrameMs:+mean.toFixed(2),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,vaultRibs:ribCount,opaqueDisplayPlanes:0,particles:count,width:innerWidth,height:innerHeight,dpr:renderer.getPixelRatio(),paused,time:+time.toFixed(3)};canvas.dataset.metrics=host.dataset.metrics=JSON.stringify(m);
  $('#status').textContent=paused?'Motion paused':'Scroll to explore';if(!paused)raf=requestAnimationFrame(render);
  }
  function invalidate(){if(!raf&&!closed){last=performance.now();raf=requestAnimationFrame(render);}}
