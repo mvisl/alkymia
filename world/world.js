@@ -89,14 +89,16 @@ async function openPassage(generation){
  if(passagePage||passagePending)return;passagePending=true;
  const previousPaused=landscapePaused;takeManualControl();landscapePaused=true;motionLabel();veil(true);
  try{
-  const [{mountPassagePage}]=await Promise.all([import('./space/passage.mjs?v=cinematic-v7'),new Promise(resolve=>setTimeout(resolve,reduced.matches?0:350))]);
+  const [{mountPassagePage}]=await Promise.all([import('./space/passage.mjs?v=seam-v8'),new Promise(resolve=>setTimeout(resolve,reduced.matches?0:350))]);
   if(generation!==routeGeneration||location.hash!=='#passage'){landscapePaused=previousPaused;motionLabel();return;}
   if(dialog.open)dialog.close();
   const mounted=await mountPassagePage({onExit({reason}){
    passagePage=null;landscapePaused=previousPaused;motionLabel();
+   if(reason==='pagehide')return;
    // The old scene is preserved, never reset or flown back to its start.
    veil(true);requestAnimationFrame(()=>requestAnimationFrame(()=>veil(false)));
    if(reason!=='route-change'&&location.hash==='#passage'){
+    if(reason!=='pagehide'&&matchMedia('(max-width:760px)').matches){location.replace(new URL('../#explore',location.href).href);return;}
     history.replaceState(null,'',location.pathname);
     document.querySelectorAll('#world-navigation a').forEach(a=>a.removeAttribute('aria-current'));
    }
@@ -209,3 +211,7 @@ new MutationObserver(()=>{if(document.documentElement.dataset.light==='night'&&!
 document.addEventListener('visibilitychange',()=>{lastCameraTime=performance.now();});
 reduced.addEventListener('change',()=>{if(reduced.matches){landscapePaused=true;motionLabel();}});
 motionLabel();if(genesis.hidden&&!location.hash)returnToWideView();
+
+window.addEventListener('alkymia-genesis-reset',()=>{takeManualControl();moveCamera(.5,1,false);});
+
+window.addEventListener('pageshow',event=>{if(event.persisted)route();});

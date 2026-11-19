@@ -42,3 +42,5 @@ try{
  }catch(error){console.warn('WebGL unavailable; using CSS night layers.',error);}
  ready=true;host.dataset.backend=gpuReady?'gpu':'css';shell.classList.add('night-ready');sync();draw();
 }catch(error){host.remove();console.warn('Night layers unavailable; retaining the original scene.',error);}
+
+window.addEventListener('alkymia-genesis-reset',()=>{cloudSeconds=0;last=0;camera={center:.5,zoom:1};pointer={x:0,y:0};target={x:0,y:0};schedule();});

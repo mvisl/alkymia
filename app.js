@@ -4,7 +4,7 @@ document.querySelector('#place-list').innerHTML=spaces.map(s=>`<a class="place" 
 document.querySelector('#hotspots').innerHTML=spaces.filter(s=>s.id!=='passage').map(s=>`<a class="hotspot" href="#${s.id}" style="left:${s.x}%;top:${s.y}%" aria-label="${s.label}: ${s.name}"><span>${s.label}<small>${s.name}</small></span></a>`).join('');
 const dialog=document.querySelector('#space-dialog');let opener=null;
 function syncRoute(){
- const id=location.hash.slice(1);const i=spaces.findIndex(s=>s.id===id);
+ const id=location.hash.slice(1);if(id==='passage'){location.replace(new URL('world/#passage',location.href).href);return;}const i=spaces.findIndex(s=>s.id===id);
  if(i<0){if(dialog.open)dialog.close();return;}
  const s=spaces[i];if(!dialog.open)opener=document.activeElement;
  document.querySelector('#space-content').innerHTML=`${art(s,'space-art')}<p class="space-eyebrow">${s.label}</p><h2 id="space-title">${s.name}</h2><p class="space-line">${s.line}</p><p class="space-body">${s.body}</p><ul class="space-details">${s.details.map(d=>`<li>${d}</li>`).join('')}</ul>`;
