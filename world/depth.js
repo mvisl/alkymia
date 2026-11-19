@@ -1,6 +1,6 @@
 import {Application,Container,Sprite,Texture,MeshPlane} from '../vendor/pixi-8.22.0/pixi.min.mjs';
 import {WIDTH,HEIGHT,layerPose} from './camera-geometry.mjs?v=solid-masks-v6';
-import {ambientCamera,ripplePoint,wakeOffset} from './ambient-motion.mjs?v=motion-v16';
+import {ambientCamera,ripplePoint,wakeOffset} from './ambient-motion.mjs?v=water-v19';
 const stage=document.querySelector('.world-window'),shell=document.querySelector('.scene-shell'),canvas=document.querySelector('.world-canvas'),intro=document.querySelector('.genesis');
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const host=document.createElement('div');host.className='night-renderer light-layer light-night';host.setAttribute('aria-hidden','true');shell.prepend(host);
@@ -44,7 +44,7 @@ stage.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||e.buttons||
   if(u>0&&u<1&&v>.12&&v<1){
    const distance=previousWake?Math.hypot(e.clientX-previousWake.x,e.clientY-previousWake.y):0;
    if(distance>2){
-    wakes.push({u,v,time:cloudSeconds,strength:Math.min(11,3+distance*.20)});
+    wakes.push({u,v,time:cloudSeconds,strength:Math.min(17,5+distance*.28)});
     if(wakes.length>10)wakes.shift();
    }
    previousWake={x:e.clientX,y:e.clientY};lastWake=cloudSeconds;

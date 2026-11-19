@@ -7,13 +7,13 @@ export function ambientCamera(camera,seconds,enabled=true){
 // bend, with horizontal ripples stronger towards the viewer; no frame swapping.
 const waterModes={
  calm:{base:.7,depth:2.5,frequency:39,speed:.9,vertical:.35},
- reflections:{base:1.8,depth:5.2,frequency:23,speed:1.15,vertical:.65},
+ reflections:{base:3,depth:8.8,frequency:26,speed:1.8,vertical:1.15},
  silk:{base:.4,depth:1.5,frequency:65,speed:.6,vertical:.12}
 };
 export function ripplePoint(x,y,width,height,seconds,mode='reflections'){
  const u=x/width,v=y/height,edge=Math.sin(Math.PI*u)*Math.sin(Math.PI*v);
  const w=waterModes[mode]||waterModes.reflections;
- return {x:x+edge*(w.base+v*w.depth)*(Math.sin(v*w.frequency+seconds*w.speed)+.25*Math.sin(u*15-v*24+seconds*.76)),y:y+edge*w.vertical*Math.sin(v*33+seconds*.35)};
+ return {x:x+edge*(w.base+v*w.depth)*(Math.sin(v*w.frequency+seconds*w.speed)+.35*Math.sin(u*15-v*24+seconds*1.15)),y:y+edge*w.vertical*Math.sin(v*33+seconds*.35)};
 }
 
 export function wakeOffset(u,v,seconds,wakes){
@@ -25,5 +25,5 @@ export function wakeOffset(u,v,seconds,wakes){
   const front=distance-age*.42;
   offset+=wake.strength*Math.sin(front*22)*Math.exp(-front*front*48)*Math.max(0,1-age/1.5)**2;
  }
- return Math.max(-8,Math.min(8,offset))*Math.sin(Math.PI*u)*Math.sin(Math.PI*v)**2;
+ return Math.max(-13,Math.min(13,offset))*Math.sin(Math.PI*u)*Math.sin(Math.PI*v)**2;
 }
