@@ -56,12 +56,12 @@
     "url": "layers/city-woodland-v15.webp"
   },
   "river": {
-    "x": 555.0,
-    "y": 361.0,
-    "width": 783.5,
-    "height": 74.0,
-    "bytes": 250504,
-    "url": "layers/river-depth-clean.webp"
+    "x": 196.5,
+    "y": 341.0,
+    "width": 1160.0,
+    "height": 94.0,
+    "bytes": 369070,
+    "url": "layers/river-continuous-v21.webp"
   },
   "sky-clouds": {
     "x": -160.0,

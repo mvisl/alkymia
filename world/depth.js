@@ -1,6 +1,6 @@
 import {Application,Container,Sprite,Texture,MeshPlane} from '../vendor/pixi-8.22.0/pixi.min.mjs';
 import {WIDTH,HEIGHT,layerPose} from './camera-geometry.mjs?v=solid-masks-v6';
-import {ambientCamera,ripplePoint,wakeOffset} from './ambient-motion.mjs?v=water-v19';
+import {ambientCamera,ripplePoint,wakeOffset} from './ambient-motion.mjs?v=river-v21';
 const stage=document.querySelector('.world-window'),shell=document.querySelector('.scene-shell'),canvas=document.querySelector('.world-canvas'),intro=document.querySelector('.genesis');
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const host=document.createElement('div');host.className='night-renderer light-layer light-night';host.setAttribute('aria-hidden','true');shell.prepend(host);
@@ -44,7 +44,7 @@ stage.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||e.buttons||
   if(u>0&&u<1&&v>.12&&v<1){
    const distance=previousWake?Math.hypot(e.clientX-previousWake.x,e.clientY-previousWake.y):0;
    if(distance>2){
-    wakes.push({u,v,time:cloudSeconds,strength:Math.min(17,5+distance*.28)});
+    wakes.push({u,v,time:cloudSeconds,strength:Math.min(13,4+distance*.22)});
     if(wakes.length>10)wakes.shift();
    }
    previousWake={x:e.clientX,y:e.clientY};lastWake=cloudSeconds;
@@ -59,11 +59,11 @@ new MutationObserver(()=>{last=0;schedule();}).observe(document.documentElement,
 document.querySelector('dialog').addEventListener('close',()=>{last=0;schedule();});
 reduced.addEventListener('change',()=>{target=pointer={x:0,y:0};schedule();});document.addEventListener('visibilitychange',()=>{last=0;schedule();});
 try{
- map=await (await fetch(new URL('night-layers.json?v=terrain-v15',import.meta.url))).json();const images={};await Promise.all(names.map(async name=>{const img=new Image();img.src=new URL(map[name].url,import.meta.url);await img.decode();images[name]=img;const m=map[name],el=document.createElement('div');el.className='night-css-plane';img.alt='';img.draggable=false;img.style.cssText=`left:${m.x}px;top:${m.y}px;width:${m.width}px;height:${m.height}px`;el.append(img);host.append(el);css[name]=el;}));
+ map=await (await fetch(new URL('night-layers.json?v=river-v21',import.meta.url))).json();const images={};await Promise.all(names.map(async name=>{const img=new Image();img.src=new URL(map[name].url,import.meta.url);await img.decode();images[name]=img;const m=map[name],el=document.createElement('div');el.className='night-css-plane';img.alt='';img.draggable=false;img.style.cssText=`left:${m.x}px;top:${m.y}px;width:${m.width}px;height:${m.height}px`;el.append(img);host.append(el);css[name]=el;}));
  // Promise completion order must never determine visual stacking.
  for(const name of names)host.append(css[name]);
  try{app=new Application();await app.init({width:view.width,height:view.height,preference:'webgl',autoStart:false,sharedTicker:false,antialias:false,autoDensity:true,resolution:Math.min(devicePixelRatio||1,2),background:0x0e1518});app.stage.eventMode='none';host.append(app.canvas);
- for(const name of names){const m=map[name],texture=Texture.from(images[name]);texture.source.autoGenerateMipmaps=true;texture.source.scaleMode='linear';texture.source.style.mipmapFilter='linear';const group=new Container(),sprite=name==='river'?new MeshPlane({texture,verticesX:61,verticesY:23}):name==='sky-clouds'?new MeshPlane({texture,verticesX:24,verticesY:10}):new Sprite(texture);if(name==='sky-clouds'){cloudMesh=sprite;cloudRest=new Float32Array(sprite.geometry.buffers[0].data);}if(name==='river'){waterMesh=sprite;waterRest=new Float32Array(sprite.geometry.buffers[0].data);}sprite.position.set(m.x,m.y);sprite.width=m.width;sprite.height=m.height;group.addChild(sprite);app.stage.addChild(group);gpu[name]=group;}gpuReady=true;
+ for(const name of names){const m=map[name],texture=Texture.from(images[name]);texture.source.autoGenerateMipmaps=true;texture.source.scaleMode='linear';texture.source.style.mipmapFilter='linear';const group=new Container(),sprite=name==='river'?new MeshPlane({texture,verticesX:97,verticesY:29}):name==='sky-clouds'?new MeshPlane({texture,verticesX:24,verticesY:10}):new Sprite(texture);if(name==='sky-clouds'){cloudMesh=sprite;cloudRest=new Float32Array(sprite.geometry.buffers[0].data);}if(name==='river'){waterMesh=sprite;waterRest=new Float32Array(sprite.geometry.buffers[0].data);}sprite.position.set(m.x,m.y);sprite.width=m.width;sprite.height=m.height;group.addChild(sprite);app.stage.addChild(group);gpu[name]=group;}gpuReady=true;
  app.canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();gpuReady=false;host.dataset.backend='css';schedule();});
  app.canvas.addEventListener('webglcontextrestored',()=>{gpuReady=true;host.dataset.backend='gpu';schedule();});
  }catch(error){console.warn('WebGL unavailable; using CSS night layers.',error);}

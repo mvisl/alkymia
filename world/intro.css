@@ -83,3 +83,14 @@
 body[data-intro-state] .world-header,body[data-intro-state] .world-lighting,body[data-intro-state] .pan-controls,body[data-intro-state] #world-navigation,body[data-intro-state] .world-motion,body[data-intro-state] .genesis-replay{opacity:0;pointer-events:none}
 .genesis-word{--word-lift:calc(-1 * clamp(150px,38svh,380px))}
 .genesis.is-playing .genesis-word-shell{transition-duration:.2s}
+
+@property --dust-opening {
+ syntax: '<length>';
+ inherits: false;
+ initial-value: 0px;
+}
+.genesis.is-dust-reveal{
+ mask-image:radial-gradient(ellipse at 50% 47%,transparent var(--dust-opening),#000 calc(var(--dust-opening) + 32vmin));
+ animation:dust-opening 1.4s cubic-bezier(.45,0,.35,1) both;
+}
+@keyframes dust-opening{from{--dust-opening:0px}to{--dust-opening:135vmax}}

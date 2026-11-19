@@ -10,8 +10,8 @@ function later(fn,delay){const id=setTimeout(fn,delay);timers.push(id);return id
 function clear(){timers.forEach(clearTimeout);timers=[];if(frameCallback&&film.cancelVideoFrameCallback)film.cancelVideoFrameCallback(frameCallback);frameCallback=0;}
 function stop(){playing=false;resumeOnVisible=false;film.pause();intro.classList.remove('is-playing');}
 function finish(){clear();stop();intro.hidden=true;document.body.dataset.introState='settling';window.dispatchEvent(new Event('alkymia-genesis-complete'));later(()=>{delete document.body.dataset.introState;},900);intro.style.removeProperty('opacity');intro.style.removeProperty('transition-duration');world.forEach(el=>el.inert=false);document.querySelector('.world-window').focus({preventScroll:true});intro.dataset.playback='complete';}
-function reveal(seconds=.85){if(revealing||intro.hidden)return;revealing=true;clear();intro.classList.add('is-leaving');intro.style.transitionDuration=`${seconds}s`;later(finish,seconds*1000+50);}
-function start(){session++;clear();stop();document.body.dataset.introState='holding';revealing=false;intro.hidden=false;intro.classList.remove('is-leaving');intro.classList.remove('is-handing-off');intro.style.removeProperty('opacity');intro.style.removeProperty('transition-duration');delete intro.dataset.phase;intro.dataset.playback='poster';status.textContent='';film.currentTime=0;fitFilm();window.dispatchEvent(new Event('alkymia-genesis-reset'));
+function reveal(seconds=.85,fromDust=false){if(revealing||intro.hidden)return;revealing=true;clear();intro.classList.add('is-leaving');if(fromDust)intro.classList.add('is-dust-reveal');intro.style.transitionDuration=`${seconds}s`;later(finish,seconds*1000+50);}
+function start(){session++;clear();stop();document.body.dataset.introState='holding';revealing=false;intro.hidden=false;intro.classList.remove('is-leaving');intro.classList.remove('is-dust-reveal');intro.style.removeProperty('opacity');intro.style.removeProperty('transition-duration');delete intro.dataset.phase;intro.dataset.playback='poster';status.textContent='';film.currentTime=0;fitFilm();window.dispatchEvent(new Event('alkymia-genesis-reset'));
  world.forEach(el=>el.inert=true);
  if(document.activeElement===replay)intro.querySelector('.genesis-skip').focus({preventScroll:true});
  later(()=>intro.dataset.phase='word',reduced.matches?100:650);
@@ -21,12 +21,15 @@ function fitFilm(){
  const r=document.querySelector('.world-window').getBoundingClientRect(),width=r.height*32/9;
  film.style.width=`${width}px`;film.style.height=`${r.height}px`;
  film.style.left=`${r.left+(r.width-width)/2}px`;film.style.top=`${r.top}px`;
+ intro.style.setProperty('--vessel-top',r.top+r.height*.30+'px');
+ intro.style.setProperty('--vessel-hit-width',r.height*.30+'px');
+ intro.style.setProperty('--vessel-hit-height',r.height*.42+'px');
 }
 window.addEventListener('resize',fitFilm);
 new ResizeObserver(fitFilm).observe(document.querySelector('.world-window'));
 function watchFrame(){if(!playing||revealing||intro.hidden)return;
 
- if(Number.isFinite(film.duration)&&film.duration>0&&film.duration-film.currentTime<=.9){reveal(Math.max(.15,film.duration-film.currentTime));return;}
+ if(Number.isFinite(film.duration)&&film.duration>0&&film.duration-film.currentTime<=.55){reveal(1.45,true);return;}
  if(film.requestVideoFrameCallback)frameCallback=film.requestVideoFrameCallback(watchFrame);
 }
 async function enter(){if(playing||revealing)return;if(reduced.matches){reveal(.22);return;}
@@ -36,7 +39,7 @@ async function enter(){if(playing||revealing)return;if(reduced.matches){reveal(.
  catch{if(current===session){status.textContent='';reveal(.65);}}
 }
 film.addEventListener('timeupdate',()=>{if(!film.requestVideoFrameCallback)watchFrame();});
-film.addEventListener('ended',()=>{if(playing&&!revealing)reveal(.25);});
+film.addEventListener('ended',()=>{if(playing&&!revealing)reveal(1.45,true);});
 film.addEventListener('error',()=>{intro.dataset.playback='unavailable';if(playing)reveal(.65);});
 vessel.addEventListener('click',enter);
 intro.querySelector('.genesis-skip').addEventListener('click',()=>{session++;stop();reveal(reduced.matches?.22:.65);});
