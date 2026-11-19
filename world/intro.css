@@ -59,7 +59,7 @@
  transform:translateX(-50%);
  min-width:min(90vw,var(--vessel-hit-width,150px));
  max-width:90vw;
- padding-top:calc(var(--vessel-hit-height,42svh) + clamp(12px,3svh,26px));
+ padding-top:calc(var(--vessel-hit-height,48svh) + clamp(12px,2svh,20px));
 }
 .genesis-vessel:focus-visible{outline:none}
 .genesis-vessel:focus-visible .genesis-enter{outline:2px solid currentColor;outline-offset:4px}

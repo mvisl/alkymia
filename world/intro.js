@@ -23,7 +23,8 @@ function fitFilm(){
  film.style.left=`${r.left+(r.width-width)/2}px`;film.style.top=`${r.top}px`;
  intro.style.setProperty('--vessel-top',r.top+r.height*.30+'px');
  intro.style.setProperty('--vessel-hit-width',r.height*.30+'px');
- intro.style.setProperty('--vessel-hit-height',r.height*.42+'px');
+ // Keep the label below the base and the bright reflection in the poster.
+ intro.style.setProperty('--vessel-hit-height',r.height*.48+'px');
 }
 window.addEventListener('resize',fitFilm);
 new ResizeObserver(fitFilm).observe(document.querySelector('.world-window'));
