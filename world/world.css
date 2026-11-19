@@ -39,3 +39,27 @@
 
 
 .world-motion{position:fixed;bottom:16px;right:4%;z-index:3;padding:6px 0;background:none;border:0;color:var(--quiet);font:8px/1.5 Arial,sans-serif;letter-spacing:.07em;cursor:pointer;opacity:.55}.world-motion:hover,.world-motion:focus-visible{opacity:1}@media(prefers-reduced-motion:reduce){.world-motion{display:none}}
+
+/* A brief shared darkness joins the independent renderers. The panorama keeps
+   its camera and GPU context while the fullscreen Passage owns interaction. */
+.section-veil{position:fixed;inset:0;z-index:20000;background:#101619;opacity:0;pointer-events:none;transition:opacity .55s cubic-bezier(.22,.61,.36,1)}
+.section-veil.is-covered{opacity:1;transition-duration:.35s}
+@media(prefers-reduced-motion:reduce){.section-veil{transition-duration:.15s}}
+
+/* Every place occupies the screen. Passage replaces this reading composition
+   with its own spatial page; the other four retain their actual English content. */
+#space-dialog{inset:0;width:100vw;max-width:none;height:100svh;max-height:none;margin:0;border:0;border-radius:0;padding:0;background:var(--surround);color:var(--ink);overflow:auto}
+#space-dialog::backdrop{background:var(--surround);backdrop-filter:none}
+#space-dialog .dialog-shell{padding:0;min-height:100svh;isolation:isolate}
+#space-dialog .close{position:fixed;right:4vw;top:24px;z-index:4;padding:12px;color:var(--ink)}
+#space-content{padding:14svh 8vw 4svh;min-height:80svh}
+#space-dialog .space-art{position:fixed;right:-3vw;top:11svh;width:60vw;max-width:none;height:77svh;margin:0;z-index:-1;pointer-events:none;mask-image:radial-gradient(ellipse 62% 64% at 50% 50%,#000 42%,transparent 100%)}
+#space-content>.space-eyebrow,#space-content>h2,#space-content>.space-line,#space-content>.space-body,#space-content>.space-details{max-width:42vw}
+#space-dialog #space-title{font-size:clamp(44px,6vw,92px);line-height:1.05;letter-spacing:-.03em;margin:22px 0 28px}
+#space-dialog .space-line{font-size:clamp(22px,2.4vw,34px);line-height:1.4}
+#space-dialog .space-body{font:15px/1.9 Arial,sans-serif}
+#space-dialog .space-navigation{position:relative;margin:0 8vw;padding:16px 0 28px;z-index:2}
+#space-dialog[open]{animation:place-arrive .65s ease both}
+@keyframes place-arrive{from{opacity:0}to{opacity:1}}
+@media(max-width:760px){#space-content{padding:110px 8vw 30px}#space-dialog .space-art{position:relative;right:auto;top:auto;width:100%;height:30svh;z-index:0}#space-content>.space-eyebrow,#space-content>h2,#space-content>.space-line,#space-content>.space-body,#space-content>.space-details{max-width:none}#space-dialog .close{top:12px}#space-dialog .space-navigation{margin-inline:8vw}}
+@media(prefers-reduced-motion:reduce){#space-dialog[open]{animation:none}}

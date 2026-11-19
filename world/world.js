@@ -13,7 +13,8 @@ let zoomTarget=1,zoomVelocity=0;
 let landscapePaused=false;
 const motionButton=document.querySelector('.world-motion');
 function motionLabel(){motionButton.textContent=landscapePaused?'Resume motion':'Pause motion';motionButton.setAttribute('aria-pressed',String(landscapePaused));motionButton.setAttribute('aria-label',motionButton.textContent+' in the landscape');document.body.dataset.motionPaused=String(landscapePaused);}
-function returnToWideView(){if(reduced.matches||document.documentElement.dataset.light!=='night'||!document.querySelector('.genesis').hidden)return;landscapePaused=false;motionLabel();moveCamera(camera.center,1,true);}
+function returnToWideView(){if(location.hash==='#passage'||document.querySelector('#alkymia-passage-page')||reduced.matches||document.documentElement.dataset.light!=='night'||!document.querySelector('.genesis').hidden)return;landscapePaused=false;motionLabel();moveCamera(camera.center,1,true);}
+let focusTimer,clearTimer;
 let manualControl=false,lastWheelAt=-Infinity,pointerPosition=null,lastPhysicalMoveAt=0;
 function syncCameraFromScroll(){
  const width=canvas.clientWidth;if(!width)return;
@@ -81,7 +82,44 @@ function frameSpace(s,animate=true,zoom=1){
 }
 const dialog=document.querySelector('#space-dialog');let opener=null;
 const art=s=>`<svg class="space-art" viewBox="${s.crop.join(' ')}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${['day','sunset','night'].map(mode=>`<image class="light-layer light-${mode}" href="../assets/world-${mode}.png" width="1672" height="941" preserveAspectRatio="none"/>`).join('')}</svg>`;
-function route(){const i=spaces.findIndex(s=>s.id===location.hash.slice(1));if(i<0){if(dialog.open)dialog.close();return;}const s=spaces[i];frameSpace(s,false);if(!dialog.open)opener=document.activeElement;
+let passagePage=null,routeGeneration=0,passagePending=false;
+const sectionVeil=document.createElement('div');sectionVeil.className='section-veil';sectionVeil.setAttribute('aria-hidden','true');document.body.append(sectionVeil);
+function veil(covered){sectionVeil.classList.toggle('is-covered',covered);}
+async function openPassage(generation){
+ if(passagePage||passagePending)return;passagePending=true;
+ const previousPaused=landscapePaused;takeManualControl();landscapePaused=true;motionLabel();veil(true);
+ try{
+  const [{mountPassagePage}]=await Promise.all([import('./space/passage.mjs?v=cinematic-v7'),new Promise(resolve=>setTimeout(resolve,reduced.matches?0:350))]);
+  if(generation!==routeGeneration||location.hash!=='#passage'){landscapePaused=previousPaused;motionLabel();return;}
+  if(dialog.open)dialog.close();
+  const mounted=await mountPassagePage({onExit({reason}){
+   passagePage=null;landscapePaused=previousPaused;motionLabel();
+   // The old scene is preserved, never reset or flown back to its start.
+   veil(true);requestAnimationFrame(()=>requestAnimationFrame(()=>veil(false)));
+   if(reason!=='route-change'&&location.hash==='#passage'){
+    history.replaceState(null,'',location.pathname);
+    document.querySelectorAll('#world-navigation a').forEach(a=>a.removeAttribute('aria-current'));
+   }
+  }});
+  if(generation!==routeGeneration||location.hash!=='#passage')mounted.unmount('route-change');
+  else passagePage=mounted.getState().destroyed?null:mounted;
+ }catch(error){
+  console.error('Passage could not be opened',error);landscapePaused=previousPaused;motionLabel();
+  // The existing readable content remains available if the optional module fails.
+  if(location.hash==='#passage'){history.replaceState(null,'',location.pathname+'#passage-reading');showSpace(spaces[0],0);}
+ }finally{passagePending=false;veil(false);}
+}
+function route(){
+ const generation=++routeGeneration;
+ const i=spaces.findIndex(s=>s.id===location.hash.slice(1));
+ if(passagePage&&spaces[i]?.id!=='passage')passagePage.unmount('route-change');
+ if(i<0){if(dialog.open)dialog.close();return;}
+ const s=spaces[i];
+ document.querySelectorAll('#world-navigation a').forEach(a=>a.setAttribute('aria-current',a.hash===location.hash?'location':'false'));
+ if(s.id==='passage'){openPassage(generation);return;}
+ showSpace(s,i);
+}
+function showSpace(s,i){frameSpace(s,false);if(!dialog.open)opener=document.activeElement;
  document.querySelector('#space-content').innerHTML=`${art(s)}<p class="space-eyebrow">${s.label}</p><h2 id="space-title">${s.name}</h2><p class="space-line">${s.line}</p><p class="space-body">${s.body}</p><ul class="space-details">${s.details.map(d=>`<li>${d}</li>`).join('')}</ul>`;
  document.querySelector('.space-navigation').innerHTML=`<a href="#${spaces[(i+4)%5].id}">← ${spaces[(i+4)%5].name}</a><a href="#${spaces[(i+1)%5].id}">${spaces[(i+1)%5].name} →</a>`;
  document.querySelectorAll('#world-navigation a').forEach(a=>a.setAttribute('aria-current',a.hash===location.hash?'location':'false'));
@@ -135,7 +173,6 @@ const silhouettes={
 };
 const silhouette=document.querySelector('#focus-silhouette');
 const navigation=document.querySelector('#world-navigation');
-let focusTimer,clearTimer;
 function emphasize(id,pan=false){
  if(manualControl||drag)return;
  clearTimeout(clearTimer);

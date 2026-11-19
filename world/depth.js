@@ -7,7 +7,7 @@ const host=document.createElement('div');host.className='night-renderer light-la
 const names=['sky-backdrop','moon-halo','moon','sky-clouds','distant-mountains','ground-backdrop','city-separated','river','landmarks','island','left-bank','right-bank','left-tree','right-tree'];
 let ready=false,app=null,gpuReady=false,raf=0,last=0,view={width:stage.clientWidth,height:stage.clientHeight},camera={center:.5,zoom:1},pointer={x:0,y:0},target={x:0,y:0},cloudSeconds=0;
 const css={},gpu={};let map,waterMesh,waterRest;
-function canMove(){return !document.hidden&&intro.hidden&&!reduced.matches&&document.body.dataset.motionPaused!=='true'&&document.documentElement.dataset.light==='night'&&!document.querySelector('dialog').open;}
+function canMove(){return !document.hidden&&intro.hidden&&!document.querySelector('#alkymia-passage-page')&&!reduced.matches&&document.body.dataset.motionPaused!=='true'&&document.documentElement.dataset.light==='night'&&!document.querySelector('dialog').open;}
 function schedule(){if(ready&&!raf&&!document.hidden)raf=requestAnimationFrame(frame);}
 function frame(now){raf=0;const dt=Math.min(.05,Math.max(0,(now-(last||now))/1000));last=now;
  if(canMove()){cloudSeconds=cloudSeconds+dt;const e=1-Math.exp(-dt/.45);pointer.x+=(target.x-pointer.x)*e;pointer.y+=(target.y-pointer.y)*e;}
