@@ -1,6 +1,6 @@
 /** Fullscreen section page. No public route, framework, Pixi, or global CSS dependency. */
 export const PASSAGE_PAGE_ID='passage';
-export const PASSAGE_BUILD='2026-11-19-cinematic1';
+export const PASSAGE_BUILD='2026-11-19-carved-interior-v4';
 let active=null,pending=null;
 export function mountPassagePage(options={}){
  if(active)return Promise.resolve(active);
@@ -44,8 +44,8 @@ $('#still').onclick=()=>{paused=!paused;controls();engine?.invalidate();};
 $('#flat').onclick=()=>setReadingView(!reading);
 reduce.addEventListener('change',async e=>{paused=e.matches;reading=e.matches;if(reading){engine?.dispose();engine=null;}controls();if(!reading&&!engine&&!disposed)await start();sync();},{signal:abort.signal});
 $('#exit').onclick=()=>unmount('back-button');$('#brand').onclick=()=>unmount('brand');$('#return').onclick=()=>unmount('completed');
-$('#restart').onclick=()=>goTo(0);
-root.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const target=root.querySelector(a.getAttribute('href'));if(target){e.preventDefault();goTo(sections.indexOf(target));}}));
+$('#restart').onclick=()=>goTo(0,{smooth:true});
+root.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const target=root.querySelector(a.getAttribute('href'));if(target){e.preventDefault();goTo(sections.indexOf(target),{smooth:true});}}));
 scroller.addEventListener('scroll',sync,{passive:true,signal:abort.signal});
 window.addEventListener('resize',sync,{passive:true,signal:abort.signal});
 window.addEventListener('pagehide',()=>unmount('pagehide'),{once:true,signal:abort.signal});
@@ -56,103 +56,66 @@ async function start(){
  try{
  const T=await import('./vendor/three.module.js');
  if(reading||disposed)return;
- const renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'low-power'});
- const mobile=innerWidth<701;renderer.setPixelRatio(Math.min(devicePixelRatio,mobile?1.25:1.5));renderer.setClearColor(0x101619);renderer.outputColorSpace=T.SRGBColorSpace;
- const scene=new T.Scene(),camera=new T.PerspectiveCamera(43,innerWidth/innerHeight,.2,160);
- const fogColor=new T.Color(0x101619);
- const vertex=`attribute float aKind;varying vec3 vP;varying vec3 vN;varying vec3 vColor;varying float vKind;varying float vDepth;
- void main(){mat4 im=mat4(1.);vec3 col=vec3(.3);\n#ifdef USE_INSTANCING\n im=instanceMatrix;\n#endif\n#ifdef USE_INSTANCING_COLOR\n col=instanceColor;\n#endif\n vec4 obj=im*vec4(position,1.);vec4 world=modelMatrix*obj;vP=world.xyz;mat3 m=mat3(im);vec3 sq=vec3(dot(m[0],m[0]),dot(m[1],m[1]),dot(m[2],m[2]));vec3 n=m*(normal/max(sq,vec3(.00001)));vN=normalize(mat3(modelMatrix)*n);vColor=col;vKind=aKind;vec4 mv=viewMatrix*world;vDepth=-mv.z;gl_Position=projectionMatrix*mv;}`;
- const fragment=`precision highp float;uniform vec3 uFog;varying vec3 vP;varying vec3 vN;varying vec3 vColor;varying float vKind;varying float vDepth;
- float inkLine(float p,float along,float width){float aa=max(fwidth(p),.0001);float id=floor(p);float seed=fract(sin(id*12.9898)*43758.5453);float drift=.10*sin(along*5.+seed*9.)+.04*sin(along*13.+id);float pressure=.6+.65*seed;float d=abs(fract(p+drift)-.5);float line=1.-smoothstep(width*pressure-aa,width*pressure+aa,d);float lift=.48+.48*pow(sin(along*1.7+seed*8.),2.);return mix(line*lift,width*1.35,smoothstep(.30,.65,aa));}
-
- void main(){vec3 n=normalize(vN);if(!gl_FrontFacing)n=-n;vec3 w=pow(abs(n),vec3(8.));w/=max(w.x+w.y+w.z,.001);vec2 p=vP.yz*w.x+vP.xz*w.y+vP.xy*w.z;
- float light=.32+.68*max(0.,dot(n,normalize(vec3(-.4,.8,.6))));float warp=.045*sin(p.x*3.1)+.038*sin(p.y*5.7+p.x*.7);
- float h1=inkLine((p.x*.8+p.y+warp)*12.,p.x-p.y*.8,.115);float h2=inkLine((p.x-p.y*.67-warp)*13.,p.y+p.x*.67,.085);
- float level=.23+.34*step(.50,light)+.25*step(.75,light);float hatch=max(h1,h2*.48*step(.5,1.-light));
- float side=.6+.4*pow(abs(n.z),2.);vec3 bone=vec3(.624,.565,.456)*level*side*.55;
- vec3 base=mix(uFog+vec3(.0035),bone,hatch*.85);
- vec2 q=p*2.9;vec2 df=fwidth(q);float d=length(fract(q)-.5);float aa=max(df.x,df.y);float dotInk=1.-smoothstep(.10-aa,.10+aa,d);dotInk*=1.-smoothstep(.25,.65,aa);
- vec3 plate=mix(uFog+vec3(.007,.012,.013),vec3(.33,.30,.23),dotInk*.65);
- base=mix(base,plate,step(.5,vKind));
- float fog=1.-exp(-pow(max(vDepth,0.)*.065,1.35));base=mix(base,uFog,clamp(fog,0.,1.));gl_FragColor=vec4(base,1.);\n#include <colorspace_fragment>\n}`;
- const mat=new T.ShaderMaterial({uniforms:{uFog:{value:fogColor}},vertexShader:vertex,fragmentShader:fragment,side:T.DoubleSide});
- const boxes=[],frameBatches=[[],[],[]],frameResources=[];let seed=52491;function rand(){seed=(seed*16807)%2147483647;return(seed-1)/2147483646;}function signed(){return rand()*2-1;}
- const temp=new T.Object3D(),parent=new T.Object3D();
- function addBox(list,pos,scale,rotation,color,kind=0){temp.position.copy(pos);temp.scale.copy(scale);temp.rotation.copy(rotation);temp.updateMatrix();list.push({matrix:temp.matrix.clone(),color:new T.Color(color),kind});}
- // Broken, offset frames. They do not form a continuous corridor or a tiled wall.
- for(let i=0;i<14;i++){
- const z=1-i*4.5;
- const cluster=Math.floor(i/7),mult=[1,.55,1.15,.85,1.6][i%5],width=(5.8+rand()*3.8)*mult,height=(5.1+rand()*3.8)*mult;
- parent.position.set(Math.sin(i*.93)*2.3+2.8+signed()*1.1,1.8+signed()*1.7,z);
- parent.rotation.set(signed()*.025,signed()*.16,signed()*.05);parent.scale.setScalar(i%9===4?1.2:1);parent.updateMatrix();
- const local=new T.Matrix4().makeScale(width/2,height/2,2.6+rand()*1.8);
- const fm=new T.Matrix4().multiplyMatrices(parent.matrix,local);
- const colors=[0x687770,0xa2a28b,0x65736e,0x8e9487];
- frameBatches[i%3].push({matrix:fm,color:new T.Color(colors[i%4]),kind:0});
- // A separated plane changes the scale and occlusion every few frames.
- if(i%4===1){addBox(boxes,new T.Vector3(parent.position.x+signed()*5.5,3+signed()*3,z-1.7),new T.Vector3(1.8+rand()*2.5,3.0+rand()*3.5,.07),new T.Euler(signed()*.12,(i%3===0?1.30:signed()*.55),signed()*.28),i%2?0x293c3e:0x414e4a,1);}
- }
- // Discontinuous ground sheets; no stairs, colonnade or ornamental vault.
- for(let i=0;i<7;i++)addBox(boxes,new T.Vector3(signed()*3.5,-3.3+rand()*.35,2-i*10.0),new T.Vector3(6+rand()*7,.10,3+rand()*2),new T.Euler(0,signed()*.2,signed()*.04),i%3?0x3e4a45:0x647068,1);
- // Scale echoes: same shape along a single ray, then scroll reveals different depth.
- const poses=[{x:0,z:12,yaw:.085},{x:.6,z:-3,yaw:.10},{x:-.35,z:-20,yaw:.025},{x:.8,z:-33,yaw:.115},{x:.15,z:-52,yaw:.06}];
- for(let k=0;k<4;k++)for(const scale of [1,3]){const st=poses[k];temp.position.set(st.x+3.2*scale+(scale===3?2.1:0),1.75+1.0*scale,st.z-8*scale);temp.rotation.set(0,.04,k%2?.035:-.035);temp.scale.set(1.9*scale,2.6*scale,.9*scale);temp.updateMatrix();frameBatches[(k+(scale===1?1:2))%3].push({matrix:temp.matrix.clone(),color:new T.Color(scale===1?0x889286:0x646f66),kind:0});}
- // Three slightly different cut, hand-shaped loops. No external model needed.
- function cutLoop(kind){
- const shape=new T.Shape(),steps=94,gap=[.56,1.12,.78][kind],start=[.12,2.3,4.0][kind];
- function pt(t,inner){const c=Math.cos(t),sn=Math.sin(t),power=[.32,.40,.28][kind];const warp=1+.022*Math.sin(t*5+kind)+.012*Math.sin(t*9+.7);const thick=.052+.012*Math.sin(t*3+kind);const r=warp-(inner?thick:0);return [Math.sign(c)*Math.pow(Math.abs(c),power)*r,Math.sign(sn)*Math.pow(Math.abs(sn),power)*r];}
- for(let j=0;j<=steps;j++){const t=start+gap+(Math.PI*2-gap)*j/steps,p=pt(t,false);if(j===0)shape.moveTo(...p);else shape.lineTo(...p);}
- for(let j=steps;j>=0;j--){const t=start+gap+(Math.PI*2-gap)*j/steps;shape.lineTo(...pt(t,true));}
- shape.closePath();const g=new T.ExtrudeGeometry(shape,{depth:.12,bevelEnabled:false,steps:1,curveSegments:1});g.translate(0,0,-.06);return g;
- }
- frameBatches.forEach((batch,kind)=>{const fg=cutLoop(kind);fg.setAttribute('aKind',new T.InstancedBufferAttribute(new Float32Array(batch.length),1));const fm=new T.InstancedMesh(fg,mat,batch.length);batch.forEach((b,i)=>{fm.setMatrixAt(i,b.matrix);fm.setColorAt(i,b.color);});fm.instanceMatrix.needsUpdate=true;fm.instanceColor.needsUpdate=true;fm.computeBoundingSphere();scene.add(fm);frameResources.push(fg);});
- const geom=new T.BoxGeometry(1,1,1);geom.setAttribute('aKind',new T.InstancedBufferAttribute(new Float32Array(boxes.map(x=>x.kind)),1));
- const mesh=new T.InstancedMesh(geom,mat,boxes.length);boxes.forEach((b,i)=>{mesh.setMatrixAt(i,b.matrix);mesh.setColorAt(i,b.color);});mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor.needsUpdate=true;mesh.computeBoundingSphere();scene.add(mesh);
- // Thin brass accents on five isolated faces, not luminous outlines on every frame.
- const edgeMat=new T.MeshBasicMaterial({color:0x9c8961,fog:false});
- const accentGeo=new T.BoxGeometry(1,1,1),accents=new T.InstancedMesh(accentGeo,edgeMat,5);
- for(let i=0;i<5;i++){temp.position.set(4.7+signed()*1.8,2.4+signed()*2,-6-i*14);temp.scale.set(.014,2.4+rand()*1.5,.025);temp.rotation.set(0,0,signed()*.25);temp.updateMatrix();accents.setMatrixAt(i,temp.matrix);}accents.computeBoundingSphere();scene.add(accents);
- const count=mobile?650:1700,pos=new Float32Array(count*3),sizes=new Float32Array(count);
- for(let i=0;i<count;i++){pos[i*3]=signed()*12;pos[i*3+1]=signed()*7+2;pos[i*3+2]=12-rand()*105;sizes[i]=.5+rand()*1.6;}
- const particles=new T.BufferGeometry();particles.setAttribute('position',new T.BufferAttribute(pos,3));particles.setAttribute('aSize',new T.BufferAttribute(sizes,1));
- const dustUniforms={uTime:{value:0},uFog:{value:fogColor}};
- const dustMat=new T.ShaderMaterial({transparent:true,depthWrite:false,uniforms:dustUniforms,vertexShader:`attribute float aSize;uniform float uTime;varying float vAlpha;void main(){vec3 p=position;p.y+=sin(p.x*.3+uTime*.09)*.035;vec4 mv=modelViewMatrix*vec4(p,1.);float fixedPoint=step(1.95,aSize);gl_PointSize=mix(clamp(25.*aSize/max(-mv.z,1.),1.,3.),2.1,fixedPoint);vAlpha=(.24+.12*aSize)*mix(exp(-max(-mv.z,0.)*.045),.5,fixedPoint);gl_Position=projectionMatrix*mv;}`,fragmentShader:`varying float vAlpha;void main(){float d=length(gl_PointCoord-.5);float a=(1.-smoothstep(.2,.5,d))*vAlpha;gl_FragColor=vec4(.55,.56,.49,a);}`});
- scene.add(new T.Points(particles,dustMat));
- let raf=0,last=performance.now(),time=0,samples=[],smoothP=progress,pointer={x:0,y:0},look={x:0,y:0},closed=false;
-
- function render(now){raf=0;if(closed||document.hidden||reading)return;
- const raw=now-last,dt=Math.min(raw/1000,.05);last=now;
- // Native scroll owns progress; damping only removes subpixel pointer noise.
- smoothP=progress;
-
- if(!paused){time+=dt;look.x+=(pointer.x-look.x)*.07;look.y+=(pointer.y-look.y)*.07;}else{look.x=0;look.y=0;}
- const u=smoothP*4,i=Math.min(3,Math.floor(u)),f=u-i;
- const g=T.MathUtils.smoothstep(T.MathUtils.clamp((f-.18)/.64,0,1),0,1),a=poses[i],b=poses[i+1];
- const p=new T.Vector3(T.MathUtils.lerp(a.x,b.x,g),1.75,T.MathUtils.lerp(a.z,b.z,g));camera.position.copy(p);
- const yaw=T.MathUtils.clamp(T.MathUtils.lerp(a.yaw,b.yaw,g)-look.x*.035,-.122,.122);
- camera.rotation.set(-look.y*.017,yaw,0,'YXZ');
- dustUniforms.uTime.value=time;renderer.render(scene,camera);
- if(!paused&&samples.length<240&&raw>0)samples.push(raw);
- const mean=samples.length?samples.reduce((a,b)=>a+b,0)/samples.length:0;
- canvas.dataset.metrics=host.dataset.metrics=JSON.stringify({renderer:'Three.js r180 / WebGL2',progress:+progress.toFixed(4),camera:[+p.x.toFixed(3),+p.y.toFixed(3),+p.z.toFixed(3)],roll:+camera.rotation.z.toFixed(6),yaw:+camera.rotation.y.toFixed(4),pitch:+camera.rotation.x.toFixed(4),frames:samples.length,meanFrameMs:+mean.toFixed(2),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,instances:boxes.length+frameBatches.reduce((n,b)=>n+b.length,0),framesInScene:frameBatches.reduce((n,b)=>n+b.length,0),particles:count,width:innerWidth,height:innerHeight,dpr:renderer.getPixelRatio(),paused,time:+time.toFixed(3)});
- $('#status').textContent=paused?'Motion paused · scroll to explore':'Scroll to change your point of view';
- if(!paused){raf=requestAnimationFrame(render);}
+ const renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
+ const mobile=innerWidth<701;renderer.setPixelRatio(Math.min(devicePixelRatio,mobile?1.25:1.5));renderer.setClearColor(0x0b1114);renderer.outputColorSpace=T.SRGBColorSpace;
+ const scene=new T.Scene(),camera=new T.PerspectiveCamera(mobile?64:57,innerWidth/innerHeight,.08,180);
+ scene.fog=new T.FogExp2(0x0b1114,.026);
+ const resources=[],materials=[];
+ const grainTexture=await new T.TextureLoader().loadAsync(new URL('engraving-grain.png',base).href);grainTexture.wrapS=grainTexture.wrapT=T.RepeatWrapping;grainTexture.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());if(disposed||reading){grainTexture.dispose();renderer.dispose();return;}resources.push(grainTexture);
+ const center=z=>Math.sin(z*.035)*1.05+Math.sin(z*.078)*.28;
+ function section(a,z){const open=T.MathUtils.smoothstep(-z,108,150);const breadth=5.4+.35*Math.sin(z*.055)+2.8*Math.exp(-Math.pow((z+28)/14,2))+1.3*Math.exp(-Math.pow((z+91)/13,2))+open*3.8;const height=4.3+.3*Math.sin(z*.07)+2.5*Math.exp(-Math.pow((z+57)/15,2))+open*2.7;const c=Math.cos(a),sn=Math.sin(a);const ripple=1+.075*Math.sin(a*3+.3*Math.sin(z*.03))+.026*Math.sin(a*5-z*.018);return new T.Vector3(center(z)+Math.sign(c)*Math.pow(Math.abs(c),.78)*breadth*ripple,1.1+Math.sign(sn)*Math.pow(Math.abs(sn),.84)*height*ripple,z);}
+ const uniform={uEye:{value:new T.Vector3()},uFog:{value:new T.Color(0x0b1114)},uGrain:{value:grainTexture},uLight:{value:new T.Vector3()},uFarLight:{value:new T.Vector3(-5,7,-183)},uNormalSign:{value:-1},uFloor:{value:0},uBare:{value:0},uDetail:{value:0}};
+ const material=new T.ShaderMaterial({side:T.BackSide,uniforms:uniform,vertexShader:`varying vec3 vP;varying vec3 vN;varying vec2 vUv;varying float vDepth;void main(){vP=position;vN=normal;vUv=uv;vec4 p=modelViewMatrix*vec4(position,1.);vDepth=-p.z;gl_Position=projectionMatrix*p;}`,fragmentShader:`precision highp float;uniform vec3 uEye;uniform vec3 uFog;uniform sampler2D uGrain;uniform vec3 uLight;uniform vec3 uFarLight;uniform float uNormalSign;uniform float uFloor;uniform float uBare;uniform float uDetail;varying vec3 vP;varying vec3 vN;varying vec2 vUv;varying float vDepth;
+ float stroke(float p,float w){float aa=max(fwidth(p),.001);float id=floor(p);float rnd=fract(sin(id*91.3)*43758.5);float along=vP.z*.6+vUv.x*12.;float drift=.16*sin(along*1.7+rnd*12.)+.08*sin(along*4.9+rnd*21.);float pressure=w*(.55+.9*rnd);float d=abs(fract(p+drift)-.5);float h=1.-smoothstep(pressure-aa,pressure+aa,d);float lift=smoothstep(.05,.45,sin(along*.9+rnd*9.)*.5+.5);return mix(h*lift,w*1.4,smoothstep(.28,.4,aa));}
+ void main(){vec3 n=normalize(vN)*uNormalSign;vec3 toLight=uLight-vP;float dist=length(toLight);float key=max(0.,dot(n,normalize(toLight)));float attenuation=pow(clamp(1.-dist/39.,0.,1.),.8);float nearGate=smoothstep(10.,26.,vDepth);float localLight=exp(-pow((vP.z-uLight.z)/9.,2.));float middle=.14*exp(-pow((vDepth-21.)/14.,2.));vec3 toFar=uFarLight-vP;float distant=max(0.,dot(n,normalize(toFar)))*exp(-length(toFar)*.045);float rake=.13*pow(max(0.,dot(n,normalize(vec3(-.6,.7,.3)))),3.)*(1.-smoothstep(10.,24.,vDepth));float rim=uDetail*.28*pow(1.-abs(dot(n,normalize(uEye-vP))),2.);float L=clamp(key*attenuation*1.75*nearGate*localLight+middle*(1.+key*.65)+distant*.7+rake+rim,0.,1.);
+ float drift=.07*sin(vUv.x*79.+vP.z*.7)+.035*sin(vP.z*2.7);float p=mix(vUv.x*120.,vP.x*3.,uFloor)+vP.z*2.27+drift;float h=stroke(p,.13);float cross=stroke(mix(vUv.x*147.,vP.x*3.67,uFloor)-vP.z*2.7-drift,.12);
+ float tone=mix(.018,.20,smoothstep(.09,.15,L));tone=mix(tone,.57,smoothstep(.32,.39,L));tone=mix(tone,.94,smoothstep(.61,.70,L));
+ tone=mix(tone,.02+L*.8,uBare);vec3 ink=vec3(.0045,.008,.009);vec3 paper=vec3(.65,.64,.55);vec3 slate=mix(ink,paper,tone);float single=smoothstep(.11,.17,L)*(1.-smoothstep(.61,.69,L));float crossed=smoothstep(.10,.16,L)*(1.-smoothstep(.32,.40,L));vec2 scanUV=vec2(mix(vUv.x*18.,vP.x*.4,uFloor),vP.z*.28);float scanInk=1.-smoothstep(.22,.85,texture2D(uGrain,scanUV).r);slate=mix(slate,ink,max(scanInk*single*.68,h*crossed*.12)*(1.-uBare));slate*=.975+.025*texture2D(uGrain,vec2(vUv.x*55.,vP.z*.7)).r;
+ float fog=1.-exp(-pow(max(vDepth,0.)*.018,1.4));gl_FragColor=vec4(mix(slate,uFog,fog*.87),1.);\n#include <colorspace_fragment>\n}`});materials.push(material);
+ const around=mobile?64:96,depth=mobile?144:220,vertices=[],uvs=[],indices=[];
+ for(let j=0;j<=depth;j++){const z=12-j*182/depth;for(let i=0;i<=around;i++){const a=i/around*Math.PI*2,p=section(a,z);vertices.push(p.x,p.y,p.z);uvs.push(i/around,j/depth);}}
+ for(let j=0;j<depth;j++)for(let i=0;i<around;i++){const a=j*(around+1)+i,b=a+around+1;indices.push(a,b,a+1,b,b+1,a+1);}
+ const shell=new T.BufferGeometry();shell.setAttribute('position',new T.Float32BufferAttribute(vertices,3));shell.setAttribute('uv',new T.Float32BufferAttribute(uvs,2));shell.setIndex(indices);shell.computeVertexNormals();resources.push(shell);scene.add(new T.Mesh(shell,material));
+ // A continuous grounded path follows the same interior, with ragged engraved edges.
+ const floorGeo=new T.PlaneGeometry(8.9,182,40,220);floorGeo.rotateX(-Math.PI/2);floorGeo.translate(0,-2.45,-79);
+ const fp=floorGeo.attributes.position;for(let i=0;i<fp.count;i++){const z=fp.getZ(i),x=fp.getX(i);fp.setX(i,x+center(z));fp.setY(i,-2.45+.035*Math.sin(z*.7+x*2)+.025*Math.sin(x*5.));}floorGeo.computeVertexNormals();resources.push(floorGeo);
+ const floorMat=material.clone();floorMat.side=T.DoubleSide;floorMat.uniforms={...uniform,uNormalSign:{value:1},uFloor:{value:1}};materials.push(floorMat);scene.add(new T.Mesh(floorGeo,floorMat));
+ // Thirteen substantial carved ribs produce real foreground/middle-distance occlusion.
+ const ribMaterial=material.clone();ribMaterial.side=T.FrontSide;ribMaterial.uniforms={...uniform,uNormalSign:{value:1},uFloor:{value:0},uDetail:{value:1}};materials.push(ribMaterial);
+ const edgeMaterial=new T.MeshBasicMaterial({color:0x0a1417,fog:true});materials.push(edgeMaterial);let ribCount=0;
+ for(let i=0;i<13;i++){const z=8-i*13.4+.8*Math.sin(i*1.7),pts=[],back=[];const gap=.16+.11*Math.sin(i*.8),start=.11*Math.sin(i*.7);for(let k=0;k<=100;k++){const a=start+gap+(Math.PI*2-gap*2)*k/100,p=section(a,z+.6*Math.sin(a*2+i*.8)),q=p.clone();p.x=center(p.z)+(p.x-center(p.z))*.978;p.y=1.1+(p.y-1.1)*.978;q.x=center(q.z)+(q.x-center(q.z))*1.008;q.y=1.1+(q.y-1.1)*1.008;pts.push(p);back.push(q);}const radius=.25+.05*Math.sin(i*.9);const g=new T.TubeGeometry(new T.CatmullRomCurve3(pts),mobile?70:110,radius,8,false);resources.push(g);scene.add(new T.Mesh(g,ribMaterial));const bg=new T.TubeGeometry(new T.CatmullRomCurve3(back),mobile?64:96,radius*.95,5,false);resources.push(bg);scene.add(new T.Mesh(bg,edgeMaterial));ribCount++;}
+ let seed=55109;function rand(){seed=seed*16807%2147483647;return(seed-1)/2147483646;}
+ const count=mobile?550:1400,points=[];
+ for(let i=0;i<count;i++){const z=8-rand()*170,a=rand()*Math.PI*2,r=i%4===0?.4+rand()*.4:.97;const p=section(a,z);points.push(center(z)+(p.x-center(z))*r,1.1+(p.y-1.1)*r,z);}
+ const dustGeo=new T.BufferGeometry();dustGeo.setAttribute('position',new T.Float32BufferAttribute(points,3));resources.push(dustGeo);
+ const dustMat=new T.PointsMaterial({size:.043,sizeAttenuation:true,color:0xb9baa5,transparent:true,opacity:.48,depthWrite:false,fog:true});materials.push(dustMat);const dust=new T.Points(dustGeo,dustMat);scene.add(dust);
+ // The passage opens into a real wider chamber; no billboard, halo or white blob.
+ const roomGeo=new T.SphereGeometry(1,mobile?48:72,mobile?32:48,0,Math.PI*2,.23,Math.PI-.23);roomGeo.scale(17,11,24);roomGeo.translate(center(-183),2,-183);resources.push(roomGeo);const roomMat=material.clone();roomMat.uniforms={...uniform,uNormalSign:{value:-1},uFloor:{value:1},uBare:{value:1}};materials.push(roomMat);scene.add(new T.Mesh(roomGeo,roomMat));
+ let raf=0,last=performance.now(),time=0,samples=[],pointer={x:0,y:0},look={x:0,y:0},closed=false;
+ const positions=[4,-24,-57,-91,-123],target=new T.Vector3();
+ function render(now){raf=0;if(closed||document.hidden||reading)return;const raw=now-last,dt=Math.min(raw/1000,.05);last=now;
+ if(!paused){time+=dt;look.x+=(pointer.x-look.x)*.055;look.y+=(pointer.y-look.y)*.055;}
+ const u=progress*4,i=Math.min(3,Math.floor(u)),f=u-i,g=T.MathUtils.smoothstep(T.MathUtils.clamp((f-.15)/.70,0,1),0,1),z=T.MathUtils.lerp(positions[i],positions[i+1],g);
+ camera.position.set(center(z),.50,z);target.set(center(z-16)+look.x*.42,.55+look.y*.20,z-16);camera.lookAt(target);camera.rotation.z=0;uniform.uEye.value.copy(camera.position);uniform.uLight.value.set(center(z-34)+1.05,4.4,z-34);
+ if(!paused)dust.position.y=Math.sin(time*.09)*.018;renderer.render(scene,camera);
+ if(!paused&&samples.length<240&&raw>0)samples.push(raw);const mean=samples.length?samples.reduce((a,b)=>a+b,0)/samples.length:0;
+ const m={renderer:'Three.js r180 / WebGL2',design:'carved-interior-v4',progress:+progress.toFixed(4),camera:camera.position.toArray().map(n=>+n.toFixed(3)),roll:+camera.rotation.z.toFixed(6),frames:samples.length,meanFrameMs:+mean.toFixed(2),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,vaultRibs:ribCount,opaqueDisplayPlanes:0,particles:count,width:innerWidth,height:innerHeight,dpr:renderer.getPixelRatio(),paused,time:+time.toFixed(3)};canvas.dataset.metrics=host.dataset.metrics=JSON.stringify(m);
+ $('#status').textContent=paused?'Motion paused':'Scroll to explore';if(!paused)raf=requestAnimationFrame(render);
  }
  function invalidate(){if(!raf&&!closed){last=performance.now();raf=requestAnimationFrame(render);}}
  function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();samples=[];invalidate();}
  function pointerMove(e){if(e.pointerType==='touch')return;pointer.x=(e.clientX/innerWidth-.5)*2;pointer.y=-(e.clientY/innerHeight-.5)*2;invalidate();}
  function visible(){if(document.hidden){cancelAnimationFrame(raf);raf=0;}else invalidate();}
- function contextLost(e){e.preventDefault();reading=true;controls();$('#status').textContent='Reading view · graphics unavailable';dispose();engine=null;}
- function dispose(){closed=true;cancelAnimationFrame(raf);window.removeEventListener('resize',resize);window.removeEventListener('pointermove',pointerMove);document.removeEventListener('visibilitychange',visible);canvas.removeEventListener('webglcontextlost',contextLost);geom.dispose();frameResources.forEach(g=>g.dispose());mat.dispose();accentGeo.dispose();edgeMat.dispose();particles.dispose();dustMat.dispose();renderer.dispose();host.dataset.disposed='true';}
- window.addEventListener('resize',resize,{passive:true});window.addEventListener('pointermove',pointerMove,{passive:true});document.addEventListener('visibilitychange',visible);canvas.addEventListener('webglcontextlost',contextLost);
- engine={invalidate,dispose};host.dataset.disposed='false';resize();invalidate();
+ function contextLost(e){e.preventDefault();reading=true;controls();dispose();engine=null;}
+ function dispose(){closed=true;cancelAnimationFrame(raf);window.removeEventListener('resize',resize);window.removeEventListener('pointermove',pointerMove);document.removeEventListener('visibilitychange',visible);canvas.removeEventListener('webglcontextlost',contextLost);resources.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());renderer.dispose();host.dataset.disposed='true';}
+ window.addEventListener('resize',resize,{passive:true});window.addEventListener('pointermove',pointerMove,{passive:true});document.addEventListener('visibilitychange',visible);canvas.addEventListener('webglcontextlost',contextLost);engine={invalidate,dispose};host.dataset.disposed='false';resize();invalidate();
  }catch(e){console.error('Passage unavailable',e);reading=true;controls();$('#status').textContent='Reading view · graphics unavailable';}finally{loading=false;}
 }
 
 
  function goTo(index,{smooth=false}={}){
   if(disposed)return;const i=Math.max(0,Math.min(4,Math.round(Number(index)||0)));
-  scroller.scrollTo({top:sections[i].offsetTop,behavior:smooth&&!paused?'smooth':'instant'});sync();
+  scroller.scrollTo({top:sections[i].offsetTop,behavior:smooth&&!paused&&!reduce.matches&&!forcedReduced?'smooth':'instant'});sync();
  }
  async function setReadingView(value){
   if(disposed)return;const chapter=Math.round(currentProgress()*4);reading=Boolean(value);
