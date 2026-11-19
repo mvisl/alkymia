@@ -211,7 +211,7 @@ async function start(){
  function render(now){raf=0;if(closed||document.hidden||reading)return;const raw=now-last,dt=Math.min(raw/1000,.05);last=now;
  if(!paused){time+=dt;look.x+=(pointer.x-look.x)*.055;look.y+=(pointer.y-look.y)*.055;}
  const u=progress*4,i=Math.min(3,Math.floor(u)),f=u-i,g=T.MathUtils.smoothstep(T.MathUtils.clamp((f-.15)/.70,0,1),0,1),z=T.MathUtils.lerp(positions[i],positions[i+1],g);
- camera.position.set(center(z),.50,z);target.set(center(z-16)+look.x*.84,.55+look.y*.40,z-16);camera.lookAt(target);camera.rotation.z=0;uniform.uEye.value.copy(camera.position);uniform.uLight.value.set(center(z-34)+1.05,4.4,z-34);
+ camera.position.set(center(z)+look.x*.38,.50+look.y*.16,z);target.set(center(z-16)+look.x*1.85,.55+look.y*.92,z-16);camera.lookAt(target);camera.rotation.z=0;uniform.uEye.value.copy(camera.position);uniform.uLight.value.set(center(z-34)+1.05,4.4,z-34);
  if(!paused)dust.position.y=Math.sin(time*.09)*.018;renderer.render(scene,camera);
  if(!paused&&samples.length<240&&raw>0)samples.push(raw);const mean=samples.length?samples.reduce((a,b)=>a+b,0)/samples.length:0;
  const m={renderer:'Three.js r180 / WebGL2',design:'carved-interior-v6',progress:+progress.toFixed(4),camera:camera.position.toArray().map(n=>+n.toFixed(3)),roll:+camera.rotation.z.toFixed(6),frames:samples.length,meanFrameMs:+mean.toFixed(2),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,vaultRibs:ribCount,opaqueDisplayPlanes:0,particles:count,width:innerWidth,height:innerHeight,dpr:renderer.getPixelRatio(),paused,time:+time.toFixed(3)};canvas.dataset.metrics=host.dataset.metrics=JSON.stringify(m);
