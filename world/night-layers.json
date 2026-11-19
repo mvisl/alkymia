@@ -52,8 +52,8 @@
     "y": 45.5,
     "width": 1541.0,
     "height": 333.5,
-    "bytes": 1127774,
-    "url": "layers/city-solid-v6.webp"
+    "bytes": 1044556,
+    "url": "layers/city-woodland-v15.webp"
   },
   "river": {
     "x": 555.0,
@@ -100,8 +100,8 @@
     "y": 210.0,
     "width": 659.5,
     "height": 203.5,
-    "bytes": 335848,
-    "url": "layers/island-verified-v6.webp"
+    "bytes": 272524,
+    "url": "layers/island-woodland-v15.webp"
   },
   "ground-backdrop": {
     "x": 0.0,
