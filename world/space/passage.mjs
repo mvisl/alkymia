@@ -1,6 +1,6 @@
 /** Fullscreen section page. No public route, framework, Pixi, or global CSS dependency. */
 export const PASSAGE_PAGE_ID='passage';
-export const PASSAGE_BUILD='passage-night-arcade-1';
+export const PASSAGE_BUILD='passage-night-arcade-2';
 let active=null,pending=null;
 export function mountPassagePage(options={}){
  if(active)return Promise.resolve(active);
@@ -104,7 +104,8 @@ async function start(){
    for(const [wall,station] of lampStations){
      if(wall===side)recess+=1.05*Math.exp(-((z-station)**4)/7)*Math.pow(Math.abs(c),16);
    }
-   const x=sn>=0?c:c*Math.min(1.8,1/Math.max(Math.abs(c),.01));
+   // Keep the straight wall legs vertical until they disappear under the paving.
+   const x=sn>=0?c:Math.sign(c)*Math.min(1,Math.abs(c)*3.8);
    return new T.Vector3(center(z)+x*(width+recess),1.55+sn*(sn>=0?rise:4.3),z);
  }
  const stoneMap={value:grainTexture};
@@ -131,7 +132,7 @@ async function start(){
    vec3 tangentX=cross(dy,n),tangentY=cross(n,dx);
    float area=dot(dx,tangentX);
    vec3 slope=sign(area)*(tangentX*dFdx(height)+tangentY*dFdy(height));
-   return normalize(max(abs(area),.00001)*n-slope*.008);
+   return normalize(max(abs(area),.00001)*n-slope*mix(.008,.0013,uFloor));
  }
  void main(){
  float portal=abs(mod(vP.z+26.,11.)-5.5);
@@ -160,13 +161,15 @@ async function start(){
  float cloud=texture2D(uGrain,stoneUV*.24+vec2(.31,.17)).r;
  float wall=pow(abs(cos(vUv.x*6.2831853)),6.)*(1.-uFloor)*(1.-uDetail);
  float surface=mix(vP.y,vP.x,uFloor);
- float course=(surface+.014*sin(vP.z*.81)+.01*sin(vP.z*2.12+surface*3.))*mix(1.24,.59,uFloor);
- float row=floor(course+.5);
- float block=vP.z*mix(.32,.47,uFloor)+mod(row,2.)*.5+.014*sin(surface*5.+row);
- float bed=abs(fract(course)-.5);
+ float wallCourse=(surface+.014*sin(vP.z*.81)+.01*sin(vP.z*2.12+surface*3.))*1.24;
+ float course=mix(wallCourse,vP.x/1.52,uFloor);
+ float row=floor(course);
+ float stagger=mod(row,2.)*.5;
+ float block=mix(vP.z*.32+.014*sin(surface*5.+row),vP.z/2.36,uFloor)+stagger;
+ float bed=min(fract(course),1.-fract(course));
  float edge=min(bed,abs(fract(block+.5)-.5));
  float aa=max(fwidth(course),fwidth(vP.z)*.47);
- float joints=(1.-smoothstep(.017,.045+aa,edge))*(1.-smoothstep(.13,.36,aa));
+ float joints=(1.-smoothstep(mix(.017,.005,uFloor),mix(.045,.016,uFloor)+aa,edge))*(1.-smoothstep(.13,.36,aa));
  float masonry=max(wall,uFloor)*(1.-uBare);
  float variation=fract(sin(row*27.1+floor(block+.5)*53.7)*43758.54);
  float stratum=.5+.5*sin(vP.y*8.+vP.z*.19+cloud*1.4);
@@ -176,7 +179,7 @@ async function start(){
  float tone=(.030+.97*pow(L,1.12))*mix(1.,.82+.34*variation,masonry)*(.97+.03*stratum);
  vec3 stone=mix(ink,albedo,tone);
  // Paving is a darker, cooler slate than the walls, so the two materials separate.
- stone*=mix(vec3(1.),vec3(.56,.62,.76),uFloor*(1.-uBare));
+ stone*=mix(vec3(1.),vec3(.62,.65,.69),uFloor*(1.-uBare));
  float windowWash=(1.-smoothstep(1.7,5.4,portal))*exp(-abs(vP.x-4.)*.18);
  stone+=vec3(.012,.030,.074)*windowWash;
  // Light wedges extend diagonally inward from the open bays, with soft penumbrae.
@@ -185,7 +188,7 @@ async function start(){
  float penumbra=.36+across*.065;
  float moonspill=(1.-smoothstep(2.15,2.15+penumbra,beam))*exp(-across*.16);
  moonspill*=smoothstep(-128.,-121.,vP.z)*(1.-smoothstep(-5.,2.,vP.z));
- stone+=vec3(.026,.058,.132)*moonspill*uFloor;
+ stone+=vec3(.022,.035,.058)*moonspill*uFloor;
  // One pool at the foot of each pier; adjacent pools alternate in strength.
  float pierZ=mod(vP.z+4.+5.5,11.)-5.5;
  float pierDist=abs(pierZ);
@@ -245,17 +248,17 @@ async function start(){
  // Worn paving holds a wet sheen: cool sky at grazing angles, amber drawn out below the lit piers.
  vec3 viewDir=normalize(uEye-vP);
  float fres=pow(1.-clamp(dot(n,viewDir),0.,1.),3.);
- float wet=uFloor*(1.-uBare)*(.35+.65*smoothstep(.30,.72,cloud))*(.70+.30*variation)*(1.-.75*joints);
- stone+=vec3(.042,.082,.170)*fres*wet*(.5+.5*smoothstep(8.,40.,vDepth));
+ float wet=uFloor*(1.-uBare)*(.73+.12*mineral.r)*(1.-.70*joints);
+ stone+=vec3(.028,.040,.061)*fres*wet*(.5+.5*smoothstep(8.,40.,vDepth));
  float warmReflect=exp(-edgeX*edgeX*.09-pierDist*pierDist*.045)*mix(.30,1.,zig);
- stone+=vec3(.46,.23,.07)*fres*wet*warmReflect;
+ stone+=vec3(.28,.155,.068)*fres*wet*warmReflect;
  float hatch=(1.-smoothstep(.18,.83,grain))*smoothstep(.07,.23,L);
  float strokeA=dot(tc,vec2(.80,.60))*30.+(grain-.5)*3.;
  float strokeB=dot(tc,vec2(-.55,.83))*26.+(cloud-.5)*3.;
  float strokeFade=1.-smoothstep(.9,2.4,max(fwidth(strokeA),fwidth(strokeB)));
  float shade=1.-smoothstep(.05,.6,L);
  float engraved=(smoothstep(.55,.9,.5+.5*sin(strokeA))*(.35+.65*shade)+smoothstep(.6,.92,.5+.5*sin(strokeB))*smoothstep(.45,.9,shade))*strokeFade;
- stone=mix(stone,ink,clamp(engraved*.045+hatch*.10+joints*masonry*.22,0.,.85));
+ stone=mix(stone,ink,clamp((engraved*.045+hatch*.10)*(1.-.9*uFloor)+joints*masonry*mix(.22,.37,uFloor),0.,.85));
  // The ceiling engraving follows the vault mesh, so its lines hold their place in motion.
  vec2 mural=vec2((vUv.x-.05)/.40,(vP.z+23.)/19.);
  vec2 inset=smoothstep(vec2(0.),vec2(.07),mural)*smoothstep(vec2(0.),vec2(.07),1.-mural);
@@ -293,9 +296,11 @@ async function start(){
  for(let j=0;j<=depth;j++){const z=12-j*182/depth;for(let i=0;i<=around;i++){const a=i/around*Math.PI*2,p=section(a,z);vertices.push(p.x,p.y,p.z);uvs.push(i/around,j/depth);}}
  for(let j=0;j<depth;j++)for(let i=0;i<around;i++){const a=j*(around+1)+i,b=a+around+1;indices.push(a,b,a+1,b,b+1,a+1);}
  const shell=new T.BufferGeometry();shell.setAttribute('position',new T.Float32BufferAttribute(vertices,3));shell.setAttribute('uv',new T.Float32BufferAttribute(uvs,2));shell.setIndex(indices);shell.computeVertexNormals();resources.push(shell);scene.add(new T.Mesh(shell,material));
- // A continuous grounded path follows the same interior, with ragged engraved edges.
- const floorGeo=new T.PlaneGeometry(16,182,40,220);floorGeo.rotateX(-Math.PI/2);floorGeo.translate(0,-2.45,-79);
- const fp=floorGeo.attributes.position;for(let i=0;i<fp.count;i++){const z=fp.getZ(i),x=fp.getX(i);fp.setX(i,x+center(z));fp.setY(i,-2.45+.035*Math.sin(z*.7+x*2)+.025*Math.sin(x*5.));}floorGeo.computeVertexNormals();resources.push(floorGeo);
+ // One level stone surface meets both walls, including in the widest bays.
+ const floorGeo=new T.PlaneGeometry(27,183);
+ floorGeo.rotateX(-Math.PI/2);
+ floorGeo.translate(0,-2.45,-79);
+ resources.push(floorGeo);
  const floorMat=material.clone();floorMat.side=T.DoubleSide;floorMat.uniforms={...uniform,uNormalSign:{value:1},uFloor:{value:1}};materials.push(floorMat);scene.add(new T.Mesh(floorGeo,floorMat));
  // A band of separate voussoirs rests on piers with stepped bases and capitals.
  const ribMaterial=material.clone();
