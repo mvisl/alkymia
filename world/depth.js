@@ -1,11 +1,11 @@
 import {Application,Container,Sprite,Texture,MeshPlane} from '../vendor/pixi-8.22.0/pixi.min.mjs';
 import {WIDTH,HEIGHT,layerPose} from './camera-geometry.mjs?v=solid-masks-v6';
-import {ambientCamera,ripplePoint} from './ambient-motion.mjs?v=solid-masks-v6';
+import {ambientCamera,ripplePoint} from './ambient-motion.mjs?v=seams-v10';
 const stage=document.querySelector('.world-window'),shell=document.querySelector('.scene-shell'),canvas=document.querySelector('.world-canvas'),intro=document.querySelector('.genesis');
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const host=document.createElement('div');host.className='night-renderer light-layer light-night';host.setAttribute('aria-hidden','true');shell.prepend(host);
 const names=['sky-backdrop','moon-halo','moon','sky-clouds','distant-mountains','ground-backdrop','city-separated','river','landmarks','island','left-bank','right-bank','left-tree','right-tree'];
-let ready=false,app=null,gpuReady=false,raf=0,last=0,view={width:stage.clientWidth,height:stage.clientHeight},camera={center:.5,zoom:1},pointer={x:0,y:0},target={x:0,y:0},cloudSeconds=0;
+let ready=false,app=null,gpuReady=false,raf=0,last=0,view={width:stage.clientWidth,height:stage.clientHeight},camera={center:.5,zoom:1},pointer={x:0,y:0},target={x:0,y:0},cloudSeconds=0,ambientStart=0;
 const css={},gpu={};let map,waterMesh,waterRest;
 function canMove(){return !document.hidden&&intro.hidden&&!document.querySelector('#alkymia-passage-page')&&!reduced.matches&&document.body.dataset.motionPaused!=='true'&&document.documentElement.dataset.light==='night'&&!document.querySelector('dialog').open;}
 function schedule(){if(ready&&!raf&&!document.hidden)raf=requestAnimationFrame(frame);}
@@ -15,7 +15,8 @@ function frame(now){raf=0;const dt=Math.min(.05,Math.max(0,(now-(last||now))/100
  draw();if(canMove())schedule();else last=0;
 }
 function draw(){if(!ready)return;
- const movingCamera=ambientCamera(camera,cloudSeconds,!reduced.matches);
+ const settling=ambientStart&&performance.now()-ambientStart<6000;
+ const movingCamera=ambientCamera(camera,settling?0:Math.max(0,cloudSeconds-6),!reduced.matches);
  for(const name of names){const p=layerPose(name,map[name],view,movingCamera,pointer,!reduced.matches);if(name==='sky-clouds'){p.x+=(96+Math.sin(cloudSeconds*.025)*48)*p.scale;p.y+=Math.sin(cloudSeconds*.05)*2*p.scale;}if(gpuReady){gpu[name].position.set(p.x,p.y);gpu[name].scale.set(p.scale);}else css[name].style.transform=`matrix(${p.scale},0,0,${p.scale},${p.x},${p.y})`;}
  if(gpuReady){if(waterMesh){const buffer=waterMesh.geometry.buffers[0],points=buffer.data;for(let i=0;i<points.length;i+=2){const q=reduced.matches?{x:waterRest[i],y:waterRest[i+1]}:ripplePoint(waterRest[i],waterRest[i+1],waterMesh.texture.width,waterMesh.texture.height,cloudSeconds);points[i]=q.x;points[i+1]=q.y;}buffer.update();}try{app.render();}catch(error){console.warn('Night renderer switched to CSS.',error);gpuReady=false;host.dataset.backend='css';draw();}}
  host.dataset.ambientZoom=movingCamera.zoom.toFixed(6);host.dataset.water=waterMesh&&gpuReady?'ripple-mesh':'static';host.dataset.cloudSeconds=cloudSeconds.toFixed(3);host.dataset.center=camera.center.toFixed(6);host.dataset.zoom=camera.zoom.toFixed(6);host.dataset.frames=String(Number(host.dataset.frames||0)+1);
@@ -44,3 +45,5 @@ try{
 }catch(error){host.remove();console.warn('Night layers unavailable; retaining the original scene.',error);}
 
 window.addEventListener('alkymia-genesis-reset',()=>{cloudSeconds=0;last=0;camera={center:.5,zoom:1};pointer={x:0,y:0};target={x:0,y:0};schedule();});
+
+window.addEventListener('alkymia-genesis-complete',()=>{ambientStart=performance.now();cloudSeconds=0;last=0;schedule();});

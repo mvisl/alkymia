@@ -66,3 +66,10 @@
 .genesis.is-playing .genesis-word-shell{opacity:0}
 /* Match the live scene's fixed upper/lower falloff throughout playback. */
 .genesis-film{mask-image:linear-gradient(to bottom,transparent,#000 14%,#000 83%,transparent)}
+
+/* World controls enter after the image has settled, rather than appearing
+   as an unrelated logo over the final film frame. The landscape remains live. */
+.world-header,.world-lighting,.pan-controls,#world-navigation,.world-motion,.genesis-replay{transition:opacity 1.2s ease}
+body[data-intro-state] .world-header,body[data-intro-state] .world-lighting,body[data-intro-state] .pan-controls,body[data-intro-state] #world-navigation,body[data-intro-state] .world-motion,body[data-intro-state] .genesis-replay{opacity:0;pointer-events:none}
+.genesis-word{--word-lift:calc(-1 * clamp(150px,38svh,380px))}
+.genesis.is-playing .genesis-word-shell{transition-duration:.2s}

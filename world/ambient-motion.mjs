@@ -1,8 +1,7 @@
 // Slow, continuous depth breathing; never writes to the user's scroll position.
 export function ambientCamera(camera,seconds,enabled=true){
  if(!enabled)return camera;
- const breath=(1-Math.cos(seconds*Math.PI/18))*.5;
- return {center:camera.center+Math.sin(seconds*Math.PI/24)*.00065,zoom:camera.zoom+breath*.012};
+ return {center:camera.center+Math.sin(seconds*Math.PI/24)*.00065,zoom:camera.zoom};
 }
 // Keep the shoreline and texture perimeter fixed. Only the interior reflections
 // bend, with horizontal ripples stronger towards the viewer; no frame swapping.

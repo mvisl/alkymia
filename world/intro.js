@@ -9,16 +9,16 @@ let timers=[],frameCallback=0,playing=false,revealing=false,session=0,resumeOnVi
 function later(fn,delay){const id=setTimeout(fn,delay);timers.push(id);return id;}
 function clear(){timers.forEach(clearTimeout);timers=[];if(frameCallback&&film.cancelVideoFrameCallback)film.cancelVideoFrameCallback(frameCallback);frameCallback=0;}
 function stop(){playing=false;resumeOnVisible=false;film.pause();intro.classList.remove('is-playing');}
-function finish(){clear();stop();intro.hidden=true;intro.style.removeProperty('opacity');intro.style.removeProperty('transition-duration');world.forEach(el=>el.inert=false);document.querySelector('.world-window').focus({preventScroll:true});intro.dataset.playback='complete';}
+function finish(){clear();stop();intro.hidden=true;document.body.dataset.introState='settling';window.dispatchEvent(new Event('alkymia-genesis-complete'));later(()=>{delete document.body.dataset.introState;},900);intro.style.removeProperty('opacity');intro.style.removeProperty('transition-duration');world.forEach(el=>el.inert=false);document.querySelector('.world-window').focus({preventScroll:true});intro.dataset.playback='complete';}
 function reveal(seconds=.85){if(revealing||intro.hidden)return;revealing=true;clear();intro.classList.add('is-leaving');intro.style.transitionDuration=`${seconds}s`;later(finish,seconds*1000+50);}
-function start(){session++;clear();stop();revealing=false;intro.hidden=false;intro.classList.remove('is-leaving');intro.classList.remove('is-handing-off');intro.style.removeProperty('opacity');intro.style.removeProperty('transition-duration');delete intro.dataset.phase;intro.dataset.playback='poster';status.textContent='';film.currentTime=0;fitFilm();window.dispatchEvent(new Event('alkymia-genesis-reset'));
+function start(){session++;clear();stop();document.body.dataset.introState='holding';revealing=false;intro.hidden=false;intro.classList.remove('is-leaving');intro.classList.remove('is-handing-off');intro.style.removeProperty('opacity');intro.style.removeProperty('transition-duration');delete intro.dataset.phase;intro.dataset.playback='poster';status.textContent='';film.currentTime=0;fitFilm();window.dispatchEvent(new Event('alkymia-genesis-reset'));
  world.forEach(el=>el.inert=true);
  if(document.activeElement===replay)intro.querySelector('.genesis-skip').focus({preventScroll:true});
  later(()=>intro.dataset.phase='word',reduced.matches?100:650);
  later(()=>intro.dataset.phase='vessel',reduced.matches?500:2300);
 }
 function fitFilm(){
- const r=document.querySelector('.world-window').getBoundingClientRect(),width=r.height*16/9;
+ const r=document.querySelector('.world-window').getBoundingClientRect(),width=r.height*32/9;
  film.style.width=`${width}px`;film.style.height=`${r.height}px`;
  film.style.left=`${r.left+(r.width-width)/2}px`;film.style.top=`${r.top}px`;
 }
@@ -30,7 +30,7 @@ function watchFrame(){if(!playing||revealing||intro.hidden)return;
  if(film.requestVideoFrameCallback)frameCallback=film.requestVideoFrameCallback(watchFrame);
 }
 async function enter(){if(playing||revealing)return;if(reduced.matches){reveal(.22);return;}
- clear();playing=true;intro.dataset.playback='loading';status.textContent='Opening the world…';const current=++session;
+ clear();playing=true;document.body.dataset.introState='playing';intro.dataset.playback='loading';status.textContent='Opening the world…';const current=++session;
  const timeout=later(()=>{if(current===session&&playing&&film.currentTime<.05){status.textContent='';reveal(.65);}},3000);
  try{await film.play();if(current!==session||intro.hidden||revealing){film.pause();return;}clearTimeout(timeout);intro.classList.add('is-playing');intro.dataset.playback='playing';status.textContent='';watchFrame();later(()=>{if(current===session&&!revealing)reveal(.65);},(Number.isFinite(film.duration)?film.duration:16)*1000+5000);}
  catch{if(current===session){status.textContent='';reveal(.65);}}
