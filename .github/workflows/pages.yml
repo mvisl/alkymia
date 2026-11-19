@@ -22,6 +22,9 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
+      # Pages can query the artifact index before the successful upload is visible.
+      - name: Allow artifact metadata to settle
+        run: sleep 10
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
