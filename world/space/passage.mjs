@@ -1,6 +1,6 @@
 /** Fullscreen section page. No public route, framework, Pixi, or global CSS dependency. */
 export const PASSAGE_PAGE_ID='passage';
-export const PASSAGE_BUILD='passage-night-arcade-2';
+export const PASSAGE_BUILD='passage-night-arcade-8';
 let active=null,pending=null;
 export function mountPassagePage(options={}){
  if(active)return Promise.resolve(active);
@@ -110,10 +110,11 @@ async function start(){
  }
  const stoneMap={value:grainTexture};
  const dressedMap={value:grainTexture};
- const vaultMap={value:grainTexture};
+ const ivoryMap={value:grainTexture},pavingMap={value:grainTexture},marbleReady={value:0};
+ const vaultMap={value:grainTexture},secondVaultMap={value:grainTexture},secondVaultArt={value:0};
  const vaultArt={value:0};
- const uniform={uStone:stoneMap,uDressed:dressedMap,uDressedAmount:{value:0},uVault:vaultMap,uVaultArt:vaultArt,uPanel:{value:grainTexture},uPanelAmount:{value:0},uLamps:{value:lampStations.map(([side,z])=>new T.Vector3(center(z)+side*(dimensions(z).width-.12),.95,z))},uEye:{value:new T.Vector3()},uFog:{value:new T.Color(0x070b15)},uGrain:{value:grainTexture},uLight:{value:new T.Vector3()},uFarLight:{value:new T.Vector3(-5,7,-183)},uNormalSign:{value:-1},uFloor:{value:0},uBare:{value:0},uDetail:{value:0}};
- const material=new T.ShaderMaterial({side:T.BackSide,uniforms:uniform,vertexShader:`varying vec3 vP;varying vec3 vN;varying vec2 vUv;varying float vDepth;void main(){vP=position;vN=normal;vUv=uv;vec4 p=modelViewMatrix*vec4(position,1.);vDepth=-p.z;gl_Position=projectionMatrix*p;}`,fragmentShader:`precision highp float;uniform vec3 uEye;uniform vec3 uLamps[4];uniform vec3 uFog;uniform sampler2D uGrain;uniform sampler2D uStone;uniform sampler2D uDressed;uniform float uDressedAmount;uniform sampler2D uVault;uniform float uVaultArt;uniform sampler2D uPanel;uniform float uPanelAmount;uniform vec3 uLight;uniform vec3 uFarLight;uniform float uNormalSign;uniform float uFloor;uniform float uBare;uniform float uDetail;varying vec3 vP;varying vec3 vN;varying vec2 vUv;varying float vDepth;
+ const uniform={uStone:stoneMap,uDressed:dressedMap,uIvory:ivoryMap,uPaving:pavingMap,uMarbleReady:marbleReady,uReflection:{value:grainTexture},uReflectionOn:{value:0},uReflectionPass:{value:0},uReflectionMatrix:{value:new T.Matrix4()},uReflectionTexel:{value:new T.Vector2()},uDressedAmount:{value:0},uVault:vaultMap,uVaultArt:vaultArt,uSecondVault:secondVaultMap,uSecondVaultArt:secondVaultArt,uPanel:{value:grainTexture},uPanelAmount:{value:0},uLamps:{value:lampStations.map(([side,z])=>new T.Vector3(center(z)+side*(dimensions(z).width-.12),.95,z))},uEye:{value:new T.Vector3()},uFog:{value:new T.Color(0x070b15)},uGrain:{value:grainTexture},uLight:{value:new T.Vector3()},uFarLight:{value:new T.Vector3(-5,7,-183)},uNormalSign:{value:-1},uFloor:{value:0},uBare:{value:0},uDetail:{value:0}};
+ const material=new T.ShaderMaterial({side:T.BackSide,uniforms:uniform,vertexShader:`varying vec3 vP;varying vec3 vN;varying vec2 vUv;varying float vDepth;void main(){vP=position;vN=normal;vUv=uv;vec4 p=modelViewMatrix*vec4(position,1.);vDepth=-p.z;gl_Position=projectionMatrix*p;}`,fragmentShader:`precision highp float;uniform vec3 uEye;uniform vec3 uLamps[4];uniform vec3 uFog;uniform sampler2D uGrain;uniform sampler2D uStone;uniform sampler2D uDressed;uniform sampler2D uIvory;uniform sampler2D uPaving;uniform float uMarbleReady;uniform sampler2D uReflection;uniform float uReflectionOn;uniform float uReflectionPass;uniform mat4 uReflectionMatrix;uniform vec2 uReflectionTexel;uniform float uDressedAmount;uniform sampler2D uVault;uniform float uVaultArt;uniform sampler2D uSecondVault;uniform float uSecondVaultArt;uniform sampler2D uPanel;uniform float uPanelAmount;uniform vec3 uLight;uniform vec3 uFarLight;uniform float uNormalSign;uniform float uFloor;uniform float uBare;uniform float uDetail;varying vec3 vP;varying vec3 vN;varying vec2 vUv;varying float vDepth;
  // Project in world units so the same stone scale holds on walls, mouldings and reveals.
  vec3 limestoneAt(vec3 p,vec3 normal){
    vec3 blend=pow(abs(normal),vec3(5.));
@@ -135,6 +136,7 @@ async function start(){
    return normalize(max(abs(area),.00001)*n-slope*mix(.008,.0013,uFloor));
  }
  void main(){
+ if(uReflectionPass>.5&&vP.y<-2.449)discard;
  float portal=abs(mod(vP.z+26.,11.)-5.5);
  float crown=max(vP.y-1.25,0.);
  if(uNormalSign<0.&&uBare<.5&&vP.x>3.5&&vP.z<1.&&vP.z>-126.&&vP.y>-1.48&&portal*portal/17.64+crown*crown/8.41<1.)discard;
@@ -176,12 +178,40 @@ async function start(){
  vec3 ink=vec3(.004,.006,.012);
  vec3 limestone=mix(vec3(.58,.45,.28),vec3(.80,.66,.44),cloud);
  vec3 albedo=mix(limestone,mineral*vec3(1.12,.98,.78),.52);
- float tone=(.030+.97*pow(L,1.12))*mix(1.,.82+.34*variation,masonry)*(.97+.03*stratum);
+ // Honed marble is laid in whole slabs. Its macro-veins stay coherent across mouldings.
+ float plinth=wall*(1.-smoothstep(-.98,-.82,vP.y));
+ float ivory=uMarbleReady*max(uDetail,plinth*.77)*(1.-uBare);
+ float paving=uMarbleReady*uFloor*(1.-uBare);
+ vec3 blend=pow(abs(surfaceNormal),vec3(6.));
+ blend/=max(dot(blend,vec3(1.)),.001);
+ vec3 marble=texture2D(uIvory,vP.zy*.29).rgb*blend.x
+            +texture2D(uIvory,vP.xz*.29).rgb*blend.y
+            +texture2D(uIvory,vP.xy*.29).rgb*blend.z;
+ vec2 pavingUv=vec2(course,block);
+ vec2 slab=fract(pavingUv);
+ if(mod(row,2.)>.5)slab.x=1.-slab.x;
+ if(variation>.5)slab.y=1.-slab.y;
+ vec3 slate=texture2D(uPaving,slab*.86+.07).rgb;
+ albedo=mix(albedo,mix(marble,mineral,.14),ivory*.88);
+ // A quiet double fillet in lighter stone defines the width of the central walk.
+ float borderDistance=abs(abs(vP.x)-4.56);
+ float borderAA=max(fwidth(vP.x),.002);
+ float mainFillet=1.-smoothstep(.037,.037+borderAA,borderDistance);
+ float outerFillet=1.-smoothstep(.014,.014+borderAA,abs(borderDistance-.16));
+ float inlay=max(mainFillet,outerFillet*.58);
+ vec3 floorAlbedo=mix(slate*1.52,marble*.67,inlay*.79);
+ albedo=mix(albedo,floorAlbedo,paving*.97);
+ float tone=(.041+.94*pow(L,1.03))*mix(1.,.86+.28*variation,masonry)*(.98+.02*stratum);
  vec3 stone=mix(ink,albedo,tone);
+ stone+=floorAlbedo*.25*paving;
+ stone+=marble*.082*plinth*uMarbleReady;
+ float plinthLip=exp(-pow((vP.y+.88)*30.,2.))*wall;
+ stone+=marble*.14*plinthLip*uMarbleReady;
  // Paving is a darker, cooler slate than the walls, so the two materials separate.
- stone*=mix(vec3(1.),vec3(.62,.65,.69),uFloor*(1.-uBare));
- float windowWash=(1.-smoothstep(1.7,5.4,portal))*exp(-abs(vP.x-4.)*.18);
- stone+=vec3(.012,.030,.074)*windowWash;
+ stone*=mix(vec3(1.),vec3(.74,.75,.76),uFloor*(1.-uBare));
+ float windowWash=(1.-smoothstep(1.9,4.7,portal))*exp(-abs(vP.x-5.4)*.30);
+ float moonFacing=max(0.,dot(surfaceNormal,normalize(vec3(.72,.34,.42))));
+ stone+=vec3(.015,.031,.060)*windowWash*(.30+.70*moonFacing);
  // Light wedges extend diagonally inward from the open bays, with soft penumbrae.
  float across=clamp(6.-vP.x,0.,15.);
  float beam=abs(mod(vP.z+26.+across*.61,11.)-5.5);
@@ -225,10 +255,10 @@ async function start(){
  float damp=(1.-uFloor)*(1.-smoothstep(-2.4,-1.1,vP.y));
  stone*=mix(1.,.79+.34*stain,.45)*(1.-.07*(1.-uFloor)*smoothstep(.45,.8,streak))*(1.-.26*damp);
  // Lamps graze the stone warmly and pick out its relief; everything else falls to cool night.
- stone*=mix(vec3(.34,.50,.90),vec3(1.34,.98,.56),warmth);
+ stone*=mix(vec3(.57,.65,.78),vec3(1.24,1.02,.75),warmth);
  stone*=1.+(grain-.5)*1.1*warmth;
  float vault=(1.-uFloor)*smoothstep(1.9,5.2,vP.y)*(1.-warmth);
- stone=mix(stone,stone*vec3(.26,.37,.66),vault*.85);
+ stone=mix(stone,stone*vec3(.27,.33,.47),vault*.85);
  float frontGraze=max(0.,dot(n,normalize(vec3(-.32,.46,.83))));
  stone+=vec3(.30,.156,.052)*uDetail*frontGraze*radial*basePool*(.52+.48*warmth)*(.65+.7*grain);
  // Arches and piers: low lamplight climbs the dressed stone, cream at the foot, ochre toward the crown.
@@ -237,6 +267,11 @@ async function start(){
  float archWarm=uDetail*(.14+.86*upGraze)*mix(.30,1.,zig)*climb;
  vec3 archTint=mix(vec3(.92,.50,.17),vec3(1.10,.74,.34),climb);
  stone+=albedo*archTint*.60*archWarm*(.62+.76*grain);
+ // A close lamp catches the carved facing and drops away before the next bay.
+ float entryFace=exp(-pow((vP.z+3.35)/1.45,2.))*uDetail;
+ float highFace=exp(-pow((vP.y-1.35)/4.4,2.));
+ float sideRake=clamp(.18+.82*dot(surfaceNormal,normalize(vec3(-.36,-.18,.92))),0.,1.);
+ stone+=vec3(.26,.132,.048)*albedo*entryFace*highFace*sideRake*(.72+.48*grain);
  // Painted warmth: a slanted wash leans up the wall from every second pier, alternating sides,
  // so the eye steps from one lit surface to the next down the walk.
  float lean=pierZ+baseRise*.62;
@@ -251,23 +286,33 @@ async function start(){
  float wet=uFloor*(1.-uBare)*(.73+.12*mineral.r)*(1.-.70*joints);
  stone+=vec3(.028,.040,.061)*fres*wet*(.5+.5*smoothstep(8.,40.,vDepth));
  float warmReflect=exp(-edgeX*edgeX*.09-pierDist*pierDist*.045)*mix(.30,1.,zig);
- stone+=vec3(.28,.155,.068)*fres*wet*warmReflect;
+ stone+=vec3(.10,.062,.035)*fres*wet*warmReflect;
+ // Broad highlights follow the viewing angle while the veins remain fixed to the slab.
+ vec3 halfRay=normalize(viewDir+normalize(footLamp-vP+vec3(.001,0.,0.)));
+ float burnish=pow(max(dot(surfaceNormal,halfRay),0.),mix(24.,58.,paving));
+ stone+=vec3(.36,.24,.135)*burnish*basePool*(ivory+paving)*(1.-.74*joints);
  float hatch=(1.-smoothstep(.18,.83,grain))*smoothstep(.07,.23,L);
  float strokeA=dot(tc,vec2(.80,.60))*30.+(grain-.5)*3.;
  float strokeB=dot(tc,vec2(-.55,.83))*26.+(cloud-.5)*3.;
  float strokeFade=1.-smoothstep(.9,2.4,max(fwidth(strokeA),fwidth(strokeB)));
  float shade=1.-smoothstep(.05,.6,L);
  float engraved=(smoothstep(.55,.9,.5+.5*sin(strokeA))*(.35+.65*shade)+smoothstep(.6,.92,.5+.5*sin(strokeB))*smoothstep(.45,.9,shade))*strokeFade;
- stone=mix(stone,ink,clamp((engraved*.045+hatch*.10)*(1.-.9*uFloor)+joints*masonry*mix(.22,.37,uFloor),0.,.85));
- // The ceiling engraving follows the vault mesh, so its lines hold their place in motion.
- vec2 mural=vec2((vUv.x-.05)/.40,(vP.z+23.)/19.);
- vec2 inset=smoothstep(vec2(0.),vec2(.07),mural)*smoothstep(vec2(0.),vec2(.07),1.-mural);
- float muralField=inset.x*inset.y*(1.-uDetail)*(1.-uFloor)*uVaultArt;
- float muralInk=1.-smoothstep(.29,.78,texture2D(uVault,clamp(mural,0.,1.)).r);
- // In the dark of the vault the drawing reads as dull gilt; in lamplight it returns to ink.
- float vaultLum=dot(stone,vec3(.299,.587,.114));
- vec3 muralLine=mix(vec3(.30,.185,.062),ink,smoothstep(.05,.28,vaultLum));
- stone=mix(stone,muralLine,muralInk*muralField*.70);
+ stone=mix(stone,ink,clamp((engraved*.045+hatch*.10)*(1.-.9*uFloor)+joints*masonry*mix(.22,.27,uFloor),0.,.85));
+ // Two individually painted bays: angle along the stone vault, distance along the passage.
+ if(uDetail<.5&&uFloor<.5&&vP.z>-26.&&vP.z<-4.&&vUv.x<.5){
+   float nextBay=step(vP.z,-15.);
+   vec2 mural=vec2((vUv.x-.012)/.476,(vP.z+15.+11.*nextBay)/11.);
+   vec2 inset=smoothstep(vec2(0.),vec2(.043,.075),mural)*smoothstep(vec2(0.),vec2(.043,.075),1.-mural);
+   float field=inset.x*inset.y*mix(uVaultArt,uSecondVaultArt,nextBay);
+   float scan=nextBay>.5?texture2D(uSecondVault,clamp(mural,0.,1.)).r
+                       :texture2D(uVault,clamp(mural,0.,1.)).r;
+   float painted=1.-smoothstep(.23,.81,scan);
+   float skywash=field*(.75+.25*mineral.r);
+   stone=mix(stone,stone*vec3(.74,.80,.87)+vec3(.035,.025,.013),skywash*.35);
+   float stoneLum=dot(stone,vec3(.299,.587,.114));
+   vec3 agedPigment=mix(vec3(.20,.126,.064),vec3(.026,.018,.015),smoothstep(.032,.23,stoneLum));
+   stone=mix(stone,agedPigment,painted*field*.76);
+ }
  if(uPanelAmount>.5){
    // Engraved panels: a smooth ivory plate against the rough frame, sepia cuts with a burnished lower lip.
    vec3 lumW=vec3(.299,.587,.114);
@@ -283,13 +328,25 @@ async function start(){
  float lip=exp(-pow((edge-.065)*48.,2.))*(1.-smoothstep(.09,.25,aa));
  stone+=limestone*lip*masonry*(L+.6*warmth)*.14;
  // A final push of chroma keeps warm and cool apart instead of averaging to grey.
- stone=max(mix(vec3(dot(stone,vec3(.299,.587,.114))),stone,1.22),0.);
- float fog=1.-exp(-pow(max(vDepth,0.)*.013,1.4));
+ if(uFloor>.5&&uBare<.5&&uReflectionOn>.5){
+   vec4 projected=uReflectionMatrix*vec4(vP,1.);
+   vec2 uv=projected.xy/projected.w*.5+.5;
+   vec2 boundary=smoothstep(vec2(0.),vec2(.035),uv)*smoothstep(vec2(0.),vec2(.035),1.-uv);
+   vec2 dx=vec2(uReflectionTexel.x*2.,0.);
+   vec2 dy=vec2(0.,uReflectionTexel.y*2.);
+   vec3 reflected=texture2D(uReflection,uv).rgb*.40;
+   reflected+=(texture2D(uReflection,uv+dx).rgb+texture2D(uReflection,uv-dx).rgb
+              +texture2D(uReflection,uv+dy).rgb+texture2D(uReflection,uv-dy).rgb)*.15;
+   float polish=(.065+.36*fres)*(1.-.83*joints)*boundary.x*boundary.y;
+   stone=mix(stone,reflected,polish);
+ }
+ stone=max(mix(vec3(dot(stone,vec3(.299,.587,.114))),stone,1.11),0.);
+ float fog=1.-exp(-pow(max(vDepth,0.)*.0095,1.43));
  vec3 atmosphere=mix(uFog,vec3(.098,.052,.020),clamp(pool*1.8+basePool*radial*.35,0.,.7));
  // The far end of the walk stays the brightest thing in the frame.
  float exitGlow=smoothstep(95.,172.,-vP.z);
- atmosphere=mix(atmosphere,vec3(.22,.34,.58),exitGlow*.54);
- stone+=vec3(.055,.095,.185)*exitGlow*(.4+.6*distant);
+ atmosphere=mix(atmosphere,vec3(.13,.18,.27),exitGlow*.36);
+ stone+=vec3(.028,.040,.069)*exitGlow*(.3+.7*distant);
  gl_FragColor=vec4(mix(stone,atmosphere,fog*.83),1.);
 #include <colorspace_fragment>\n}`});materials.push(material);
  const around=mobile?64:96,depth=mobile?144:220,vertices=[],uvs=[],indices=[];
@@ -301,7 +358,51 @@ async function start(){
  floorGeo.rotateX(-Math.PI/2);
  floorGeo.translate(0,-2.45,-79);
  resources.push(floorGeo);
- const floorMat=material.clone();floorMat.side=T.DoubleSide;floorMat.uniforms={...uniform,uNormalSign:{value:1},uFloor:{value:1}};materials.push(floorMat);scene.add(new T.Mesh(floorGeo,floorMat));
+ const floorMat=material.clone();
+ floorMat.side=T.FrontSide;
+ floorMat.uniforms={...uniform,uNormalSign:{value:1},uFloor:{value:1}};
+ materials.push(floorMat);
+ const floor=new T.Mesh(floorGeo,floorMat);
+ scene.add(floor);
+ const reflectionCamera=new T.PerspectiveCamera();
+ const reflectionTarget=new T.WebGLRenderTarget(1,1,{depthBuffer:true});
+ const reflectionAim=new T.Vector3();
+ resources.push(reflectionTarget);
+ function sizeReflection(){
+   const width=Math.min(mobile?300:640,Math.max(1,Math.round(innerWidth*.52)));
+   const height=Math.max(1,Math.round(width*innerHeight/innerWidth));
+   reflectionTarget.setSize(width,height);
+   uniform.uReflectionTexel.value.set(1/width,1/height);
+ }
+ let lastReflection=-Infinity,lastReflectionZ=Infinity,lastReflectionTurn=Infinity,lastReflectionAimY=Infinity;
+ function renderReflection(now,z,turn,target){
+   const moved=Math.abs(z-lastReflectionZ)>.025||Math.abs(turn-lastReflectionTurn)>.004||Math.abs(target.y-lastReflectionAimY)>.012;
+   if(!moved||(!paused&&now-lastReflection<(mobile?65:42)))return;
+   lastReflection=now;lastReflectionZ=z;lastReflectionTurn=turn;lastReflectionAimY=target.y;
+   reflectionCamera.copy(camera,false);
+   reflectionCamera.position.y=-4.90-camera.position.y;
+   reflectionCamera.up.set(0,-1,0);
+   reflectionAim.copy(target);reflectionAim.y=-4.90-target.y;
+   reflectionCamera.lookAt(reflectionAim);
+   reflectionCamera.updateMatrixWorld(true);
+   uniform.uReflectionMatrix.value.multiplyMatrices(reflectionCamera.projectionMatrix,reflectionCamera.matrixWorldInverse);
+   const old=renderer.getRenderTarget();
+   floor.visible=false;
+   uniform.uReflectionPass.value=1;
+   uniform.uReflection.value=grainTexture;
+   uniform.uEye.value.copy(reflectionCamera.position);
+   try{
+     renderer.setRenderTarget(reflectionTarget);
+     renderer.render(scene,reflectionCamera);
+     uniform.uReflectionOn.value=1;
+   }finally{
+     renderer.setRenderTarget(old);
+     uniform.uEye.value.copy(camera.position);
+     uniform.uReflectionPass.value=0;
+     uniform.uReflection.value=reflectionTarget.texture;
+     floor.visible=true;
+   }
+ }
  // A band of separate voussoirs rests on piers with stepped bases and capitals.
  const ribMaterial=material.clone();
  ribMaterial.side=T.FrontSide;
@@ -400,16 +501,19 @@ async function start(){
    {name:'city-woodland-v15',distance:40,x:64.5,y:45.5,w:1541,h:333.5},
    {name:'river-depth-clean',distance:34,x:555,y:361,w:783.5,h:74}
  ];
- const [landscape,limestone,dressed,mural,exterior,...studies]=await Promise.all([
+ const [landscape,limestone,dressed,ivory,paving,mural,secondMural,exterior,...studies]=await Promise.all([
    loader.loadAsync(new URL('river-panorama.webp',base)),
    loader.loadAsync(new URL('limestone.webp',base)).catch(()=>null),
    loader.loadAsync(new URL('dressed-stone.webp',base)).catch(()=>null),
-   loader.loadAsync(new URL('vault-engraving.webp',base)).catch(()=>null),
+   loader.loadAsync(new URL('ivory-marble.webp',base)).catch(()=>null),
+   loader.loadAsync(new URL('charcoal-marble.webp',base)).catch(()=>null),
+   loader.loadAsync(new URL('celestial-vault.webp',base)).catch(()=>loader.loadAsync(new URL('vault-engraving.webp',base)).catch(()=>null)),
+   loader.loadAsync(new URL('river-vault.webp',base)).catch(()=>null),
    Promise.all(layers.map(layer=>loader.loadAsync(new URL(layer.name+'.webp',base)).catch(()=>null))),
    ...bayStops.map(bay=>loader.loadAsync(new URL(bay.image,base)).catch(()=>null))
  ]);
- if(disposed||reading){landscape.dispose();mural?.dispose();exterior.forEach(texture=>texture?.dispose());studies.forEach(texture=>texture?.dispose());limestone?.dispose();dressed?.dispose();resources.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());renderer.dispose();return;}
- for(const texture of [landscape,limestone,dressed,mural,...exterior,...studies]){
+ if(disposed||reading){landscape.dispose();mural?.dispose();secondMural?.dispose();exterior.forEach(texture=>texture?.dispose());studies.forEach(texture=>texture?.dispose());limestone?.dispose();dressed?.dispose();ivory?.dispose();paving?.dispose();resources.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());renderer.dispose();return;}
+ for(const texture of [landscape,limestone,dressed,ivory,paving,mural,...exterior,...studies]){
    if(!texture)continue;
    resources.push(texture);
    texture.colorSpace=T.SRGBColorSpace;
@@ -421,7 +525,12 @@ async function start(){
  }else{
    archMaterial.uniforms.uDressedAmount.value=0;
  }
+ if(ivory&&paving){
+   ivory.wrapS=ivory.wrapT=T.MirroredRepeatWrapping;
+   ivoryMap.value=ivory;pavingMap.value=paving;marbleReady.value=1;
+ }
  if(mural){vaultMap.value=mural;vaultArt.value=1;}
+ if(secondMural){secondVaultMap.value=secondMural;secondVaultArt.value=1;}
  if(limestone){limestone.wrapS=limestone.wrapT=T.RepeatWrapping;stoneMap.value=limestone;}
  const waterClock={value:0};
  // Night grade for the world outside: deep saturated moon-blue, with the amber town lights kept warm.
@@ -611,13 +720,13 @@ async function start(){
  turn=paused||forcedReduced?angle:T.MathUtils.lerp(turn,angle,1-Math.exp(-dt*9));
  camera.position.set(center(z),-.72,z);
  target.set(center(z-16)+Math.sin(turn)*16,-.08+look.y*.40,z-Math.cos(turn)*16);camera.lookAt(target);camera.rotation.z=0;uniform.uEye.value.copy(camera.position);uniform.uLight.value.set(center(z-34)+1.05,4.4,z-34);
- if(!paused)dust.position.y=Math.sin(time*.09)*.018;renderer.render(scene,camera);
+ if(!paused)dust.position.y=Math.sin(time*.09)*.018;renderReflection(now,z,turn,target);renderer.render(scene,camera);
  if(!paused&&samples.length<240&&raw>0)samples.push(raw);const mean=samples.length?samples.reduce((a,b)=>a+b,0)/samples.length:0;
  const m={renderer:'Three.js r180 / WebGL2',design:'night-arcade',progress:+progress.toFixed(4),camera:camera.position.toArray().map(n=>+n.toFixed(3)),roll:+camera.rotation.z.toFixed(6),frames:samples.length,meanFrameMs:+mean.toFixed(2),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,vaultRibs:ribCount,opaqueDisplayPlanes:0,particles:count,width:innerWidth,height:innerHeight,dpr:renderer.getPixelRatio(),paused,time:+time.toFixed(3)};canvas.dataset.metrics=host.dataset.metrics=JSON.stringify(m);
  $('#status').textContent=paused?'Motion paused':'Scroll to explore';if(!paused)raf=requestAnimationFrame(render);
  }
  function invalidate(){if(!raf&&!closed){last=performance.now();raf=requestAnimationFrame(render);}}
- function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();samples=[];invalidate();}
+ function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();sizeReflection();lastReflectionZ=Infinity;lastReflection=-Infinity;samples=[];invalidate();}
  function pointerMove(e){if(e.pointerType==='touch')return;pointer.x=(e.clientX/innerWidth-.5)*2;pointer.y=-(e.clientY/innerHeight-.5)*2;invalidate();}
  function visible(){if(document.hidden){updateFilm(false);cancelAnimationFrame(raf);raf=0;}else invalidate();}
  function contextLost(e){e.preventDefault();reading=true;controls();dispose();engine=null;}
