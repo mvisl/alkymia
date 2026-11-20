@@ -1,6 +1,6 @@
 /** Fullscreen section page. No public route, framework, Pixi, or global CSS dependency. */
 export const PASSAGE_PAGE_ID='passage';
-export const PASSAGE_BUILD='passage-night-arcade-9';
+export const PASSAGE_BUILD='passage-night-arcade-12';
 let active=null,pending=null;
 export function mountPassagePage(options={}){
  if(active)return Promise.resolve(active);
@@ -39,7 +39,7 @@ let paused=forcedReduced,reading=Boolean(options.readingView||forcedReduced),eng
 const canvas=$('#passage');
 let focusSide='';
 const bayStops=[
- {progress:.25,z:-31.5,title:'Arcade study',caption:'We draw the same space from different viewpoints to see what each one reveals.',image:'arcade-engraving.webp',ink:true},
+ {progress:.25,z:-31.5,title:'Two views of the arcade',caption:'From the axis, the arches draw the eye forward. From the side, the same bays frame the valley.',image:'arcade-two-views.webp',ink:true},
  {progress:.50,z:-63.5,title:'Form studies',caption:'We test three profiles for the same span and compare the space each one opens.',image:'form-study.svg',ink:true},
  {progress:.75,z:-97.5,title:'Transformation study',caption:'We carried the vessel’s fragments into the city illustration to connect the opening and the world.',image:'transformation-poster.webp',ink:false}
 ];
@@ -113,8 +113,8 @@ async function start(){
  const ivoryMap={value:grainTexture},pavingMap={value:grainTexture},marbleReady={value:0};
  const vaultMap={value:grainTexture},secondVaultMap={value:grainTexture},secondVaultArt={value:0};
  const vaultArt={value:0};
- const uniform={uStone:stoneMap,uDressed:dressedMap,uIvory:ivoryMap,uPaving:pavingMap,uMarbleReady:marbleReady,uReflection:{value:grainTexture},uReflectionOn:{value:0},uReflectionPass:{value:0},uReflectionMatrix:{value:new T.Matrix4()},uReflectionTexel:{value:new T.Vector2()},uDressedAmount:{value:0},uVault:vaultMap,uVaultArt:vaultArt,uSecondVault:secondVaultMap,uSecondVaultArt:secondVaultArt,uPanel:{value:grainTexture},uPanelAmount:{value:0},uLamps:{value:lampStations.map(([side,z])=>new T.Vector3(center(z)+side*(dimensions(z).width-.12),.95,z))},uEye:{value:new T.Vector3()},uFog:{value:new T.Color(0x070b15)},uGrain:{value:grainTexture},uLight:{value:new T.Vector3()},uFarLight:{value:new T.Vector3(-5,7,-183)},uNormalSign:{value:-1},uFloor:{value:0},uBare:{value:0},uDetail:{value:0}};
- const material=new T.ShaderMaterial({side:T.BackSide,uniforms:uniform,vertexShader:`varying vec3 vP;varying vec3 vN;varying vec2 vUv;varying float vDepth;void main(){vP=position;vN=normal;vUv=uv;vec4 p=modelViewMatrix*vec4(position,1.);vDepth=-p.z;gl_Position=projectionMatrix*p;}`,fragmentShader:`precision highp float;uniform vec3 uEye;uniform vec3 uLamps[4];uniform vec3 uFog;uniform sampler2D uGrain;uniform sampler2D uStone;uniform sampler2D uDressed;uniform sampler2D uIvory;uniform sampler2D uPaving;uniform float uMarbleReady;uniform sampler2D uReflection;uniform float uReflectionOn;uniform float uReflectionPass;uniform mat4 uReflectionMatrix;uniform vec2 uReflectionTexel;uniform float uDressedAmount;uniform sampler2D uVault;uniform float uVaultArt;uniform sampler2D uSecondVault;uniform float uSecondVaultArt;uniform sampler2D uPanel;uniform float uPanelAmount;uniform vec3 uLight;uniform vec3 uFarLight;uniform float uNormalSign;uniform float uFloor;uniform float uBare;uniform float uDetail;varying vec3 vP;varying vec3 vN;varying vec2 vUv;varying float vDepth;
+ const uniform={uStone:stoneMap,uDressed:dressedMap,uIvory:ivoryMap,uPaving:pavingMap,uMarbleReady:marbleReady,uPier:{value:0},uReflection:{value:grainTexture},uReflectionOn:{value:0},uReflectionPass:{value:0},uReflectionMatrix:{value:new T.Matrix4()},uReflectionTexel:{value:new T.Vector2()},uDressedAmount:{value:0},uVault:vaultMap,uVaultArt:vaultArt,uSecondVault:secondVaultMap,uSecondVaultArt:secondVaultArt,uPanel:{value:grainTexture},uPanelAmount:{value:0},uLamps:{value:lampStations.map(([side,z])=>new T.Vector3(center(z)+side*(dimensions(z).width-.12),.95,z))},uEye:{value:new T.Vector3()},uFog:{value:new T.Color(0x070b15)},uGrain:{value:grainTexture},uLight:{value:new T.Vector3()},uFarLight:{value:new T.Vector3(-5,7,-183)},uNormalSign:{value:-1},uFloor:{value:0},uBare:{value:0},uDetail:{value:0}};
+ const material=new T.ShaderMaterial({side:T.BackSide,uniforms:uniform,vertexShader:`varying vec3 vP;varying vec3 vN;varying vec2 vUv;varying float vDepth;void main(){vP=position;vN=normal;vUv=uv;vec4 p=modelViewMatrix*vec4(position,1.);vDepth=-p.z;gl_Position=projectionMatrix*p;}`,fragmentShader:`precision highp float;uniform vec3 uEye;uniform vec3 uLamps[4];uniform vec3 uFog;uniform sampler2D uGrain;uniform sampler2D uStone;uniform sampler2D uDressed;uniform sampler2D uIvory;uniform sampler2D uPaving;uniform float uMarbleReady;uniform float uPier;uniform sampler2D uReflection;uniform float uReflectionOn;uniform float uReflectionPass;uniform mat4 uReflectionMatrix;uniform vec2 uReflectionTexel;uniform float uDressedAmount;uniform sampler2D uVault;uniform float uVaultArt;uniform sampler2D uSecondVault;uniform float uSecondVaultArt;uniform sampler2D uPanel;uniform float uPanelAmount;uniform vec3 uLight;uniform vec3 uFarLight;uniform float uNormalSign;uniform float uFloor;uniform float uBare;uniform float uDetail;varying vec3 vP;varying vec3 vN;varying vec2 vUv;varying float vDepth;
  // Project in world units so the same stone scale holds on walls, mouldings and reveals.
  vec3 limestoneAt(vec3 p,vec3 normal){
    vec3 blend=pow(abs(normal),vec3(5.));
@@ -192,7 +192,10 @@ async function start(){
  if(mod(row,2.)>.5)slab.x=1.-slab.x;
  if(variation>.5)slab.y=1.-slab.y;
  vec3 slate=texture2D(uPaving,slab*.86+.07).rgb;
+ vec3 agedMarble=marble*vec3(.70,.66,.61);
+ agedMarble=mix(agedMarble,agedMarble*.71,smoothstep(.08,.35,1.-marble.r));
  albedo=mix(albedo,mix(marble,mineral,.14),ivory*.88);
+ albedo=mix(albedo,agedMarble,uPier*ivory*.84);
  // A quiet double fillet in lighter stone defines the width of the central walk.
  float borderDistance=abs(abs(vP.x)-4.56);
  float borderAA=max(fwidth(vP.x),.002);
@@ -271,18 +274,18 @@ async function start(){
  float vault=(1.-uFloor)*smoothstep(1.9,5.2,vP.y)*(1.-warmth);
  stone=mix(stone,stone*mix(vec3(.27,.33,.47),vec3(.29,.31,.37),nearFace),vault*.85);
  float frontGraze=max(0.,dot(n,normalize(vec3(-.32,.46,.83))));
- stone+=vec3(.30,.156,.052)*uDetail*frontGraze*radial*basePool*(.52+.48*warmth)*(.65+.7*grain);
+ stone+=vec3(.30,.156,.052)*uDetail*(1.-.36*uPier)*frontGraze*radial*basePool*(.52+.48*warmth)*(.65+.7*grain);
  // Arches and piers: low lamplight climbs the dressed stone, cream at the foot, ochre toward the crown.
  float upGraze=max(0.,dot(n,normalize(vec3(-sign(vP.x)*.35,-.5,.8))));
  float climb=exp(-baseRise*.16);
- float archWarm=uDetail*(.14+.86*upGraze)*mix(.30,1.,zig)*climb;
+ float archWarm=uDetail*(1.-.32*uPier)*(.14+.86*upGraze)*mix(.30,1.,zig)*climb;
  vec3 archTint=mix(vec3(.92,.50,.17),vec3(1.10,.74,.34),climb);
  stone+=albedo*archTint*.60*archWarm*(.62+.76*grain);
  // A close lamp catches the carved facing and drops away before the next bay.
  float entryFace=exp(-pow((vP.z+3.35)/1.45,2.))*uDetail;
  float highFace=exp(-pow((vP.y-1.35)/4.4,2.));
  float sideRake=clamp(.18+.82*dot(surfaceNormal,normalize(vec3(-.36,-.18,.92))),0.,1.);
- stone+=vec3(.26,.132,.048)*albedo*entryFace*highFace*sideRake*(.72+.48*grain);
+ stone+=vec3(.26,.132,.048)*albedo*entryFace*highFace*sideRake*(1.-.40*uPier)*(.72+.48*grain);
  // Painted warmth: a slanted wash leans up the wall from every second pier, alternating sides,
  // so the eye steps from one lit surface to the next down the walk.
  float lean=pierZ+baseRise*.62;
@@ -390,7 +393,8 @@ async function start(){
  let lastReflection=-Infinity,lastReflectionZ=Infinity,lastReflectionTurn=Infinity,lastReflectionAimY=Infinity;
  function renderReflection(now,z,turn,target){
    const moved=Math.abs(z-lastReflectionZ)>.025||Math.abs(turn-lastReflectionTurn)>.004||Math.abs(target.y-lastReflectionAimY)>.012;
-   if(!moved||(!paused&&now-lastReflection<(mobile?65:42)))return;
+   const movingSky=!paused&&now-lastReflection>(mobile?180:120);
+   if((!moved&&!movingSky)||(!paused&&now-lastReflection<(mobile?65:42)))return;
    lastReflection=now;lastReflectionZ=z;lastReflectionTurn=turn;lastReflectionAimY=target.y;
    reflectionCamera.copy(camera,false);
    reflectionCamera.position.y=-4.90-camera.position.y;
@@ -424,6 +428,9 @@ async function start(){
  const archMaterial=ribMaterial.clone();
  archMaterial.uniforms={...ribMaterial.uniforms,uDressedAmount:{value:1}};
  materials.push(archMaterial);
+ const pierMaterial=ribMaterial.clone();
+ pierMaterial.uniforms={...ribMaterial.uniforms,uPier:{value:1}};
+ materials.push(pierMaterial);
  const lanternMaterial=new T.MeshBasicMaterial({color:0xffc470});
  materials.push(lanternMaterial);
 
@@ -452,6 +459,26 @@ async function start(){
    addMesh(geometry,ribMaterial);
  }
 
+ function dressedPier(x,z,width){
+   const bevel=.022,depth=1.36;
+   const courses=[-2.43,-1.60,-.62,.37,1.53];
+   const faces=[];
+   for(let i=0;i<courses.length-1;i++){
+     const half=width*(i%2===0?.50:.495);
+     const base=courses[i]+.030,top=courses[i+1]-.030;
+     const face=new T.Shape();
+     face.moveTo(-half,base);face.lineTo(half,base);
+     face.lineTo(half,top);face.lineTo(-half,top);face.closePath();
+     faces.push(face);
+   }
+   const geometry=new T.ExtrudeGeometry(faces,{
+     depth:depth-2*bevel,bevelEnabled:true,bevelSize:bevel,
+     bevelThickness:bevel,bevelSegments:2,curveSegments:1
+   });
+   geometry.translate(x,0,z-depth/2+bevel);
+   addMesh(geometry,pierMaterial);
+   block(x,-.46,z,width*.94,3.93,depth*.94,pierMaterial);
+ }
  function archBand(z,rise,width,thickness,depth){
    const vertices=[],indices=[];
    const count=17,steps=4;
@@ -490,7 +517,7 @@ async function start(){
    }
    for(const side of [-1,1]){
      const x=center(z)+side*(width-.13);
-     dressedBlock(x,-.46,z,thickness+.35,3.94,1.36);
+     dressedPier(x,z,thickness+.35);
      dressedBlock(x,-2.25,z,thickness+.72,.33,1.60,.035);
      dressedBlock(x,-2.00,z,thickness+.56,.16,1.49,.032);
      dressedBlock(x,1.40,z,thickness+.61,.23,1.63,.04);
@@ -514,7 +541,7 @@ async function start(){
    {name:'city-woodland-v15',distance:40,x:64.5,y:45.5,w:1541,h:333.5},
    {name:'river-depth-clean',distance:34,x:555,y:361,w:783.5,h:74}
  ];
- const [landscape,limestone,dressed,ivory,paving,mural,secondMural,exterior,...studies]=await Promise.all([
+ const [landscape,limestone,dressed,ivory,paving,mural,secondMural,clouds,exterior,...studies]=await Promise.all([
    loader.loadAsync(new URL('river-panorama.webp',base)),
    loader.loadAsync(new URL('limestone.webp',base)).catch(()=>null),
    loader.loadAsync(new URL('dressed-stone.webp',base)).catch(()=>null),
@@ -522,11 +549,12 @@ async function start(){
    loader.loadAsync(new URL('charcoal-marble.webp',base)).catch(()=>null),
    loader.loadAsync(new URL('celestial-vault.webp',base)).catch(()=>loader.loadAsync(new URL('vault-engraving.webp',base)).catch(()=>null)),
    loader.loadAsync(new URL('river-vault.webp',base)).catch(()=>null),
+   loader.loadAsync(new URL('passage-clouds.webp',base)).catch(()=>null),
    Promise.all(layers.map(layer=>loader.loadAsync(new URL(layer.name+'.webp',base)).catch(()=>null))),
    ...bayStops.map(bay=>loader.loadAsync(new URL(bay.image,base)).catch(()=>null))
  ]);
- if(disposed||reading){landscape.dispose();mural?.dispose();secondMural?.dispose();exterior.forEach(texture=>texture?.dispose());studies.forEach(texture=>texture?.dispose());limestone?.dispose();dressed?.dispose();ivory?.dispose();paving?.dispose();resources.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());renderer.dispose();return;}
- for(const texture of [landscape,limestone,dressed,ivory,paving,mural,...exterior,...studies]){
+ if(disposed||reading){landscape.dispose();mural?.dispose();secondMural?.dispose();clouds?.dispose();exterior.forEach(texture=>texture?.dispose());studies.forEach(texture=>texture?.dispose());limestone?.dispose();dressed?.dispose();ivory?.dispose();paving?.dispose();resources.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());renderer.dispose();return;}
+ for(const texture of [landscape,limestone,dressed,ivory,paving,mural,secondMural,clouds,...exterior,...studies]){
    if(!texture)continue;
    resources.push(texture);
    texture.colorSpace=T.SRGBColorSpace;
@@ -570,6 +598,37 @@ async function start(){
    addMesh(geometry,picture);
    return picture;
  }
+ function nightBackdrop(width,height,x,y,z,rotation){
+   const plane=new T.PlaneGeometry(width,height);
+   plane.rotateY(rotation);plane.translate(x,y,z);
+   const sky=new T.ShaderMaterial({
+     side:T.DoubleSide,
+     vertexShader:`varying vec2 vSky;void main(){vSky=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+     fragmentShader:`varying vec2 vSky;void main(){
+       gl_FragColor=vec4(mix(vec3(.017,.031,.052),vec3(.004,.008,.016),smoothstep(.12,.92,vSky.y)),1.);
+       #include <colorspace_fragment>
+     }`
+   });
+   materials.push(sky);addMesh(plane,sky);
+ }
+ function paintedClouds(width,height,x,y,z,rotation,phase,bias=0){
+   const material=litImage(clouds,width,height,x,y,z,rotation,true);
+   material.onBeforeCompile=shader=>{
+     shader.uniforms.uCloudTime=waterClock;
+     shader.uniforms.uPhase={value:phase};
+     shader.uniforms.uCloudBias={value:bias};
+     shader.fragmentShader='uniform float uCloudTime;uniform float uPhase;uniform float uCloudBias;\n'
+       +shader.fragmentShader.replace('#include <map_fragment>',`
+         float drift=.088*sin(uCloudTime*.067+uPhase);
+         vec2 cloudUv=vec2(.10+vMapUv.x*.80+drift+uCloudBias,vMapUv.y);
+         vec4 cloud=texture2D(map,cloudUv);
+         float edge=smoothstep(0.,.10,vMapUv.x)*(1.-smoothstep(.90,1.,vMapUv.x));
+         vec3 moonlitCloud=pow(max(cloud.rgb,0.),vec3(.77))*vec3(.92,1.02,1.16);
+         diffuseColor*=vec4(moonlitCloud,min(1.,cloud.a*1.70)*edge);
+       `);
+   };
+   material.customProgramCacheKey=()=> 'arcade-painted-clouds';
+ }
  // Anchor all layer coordinates to the same panoramic view at this station.
  // Scale with distance from that camera so the city and sky align at rest and separate in motion.
  if(exterior.every(Boolean)){
@@ -577,6 +636,11 @@ async function start(){
      const scale=.145*(layer.distance/40);
      const z=-76+(layer.x+layer.w/2-836)*scale;
      const y=4+(217.5-layer.y-layer.h/2)*scale;
+     if(index===0&&clouds){
+       nightBackdrop(layer.w*scale,layer.h*scale,layer.distance,y,z,-Math.PI/2);
+       paintedClouds(layer.w*scale*1.16,layer.h*scale,50,y,z,-Math.PI/2,.08);
+       continue;
+     }
      const surface=litImage(exterior[index],layer.w*scale,layer.h*scale,layer.distance,y,z,-Math.PI/2,index!==0,layer.name!=='moon');
      if(layer.name==='river-depth-clean'){
        surface.onBeforeCompile=shader=>{
@@ -599,7 +663,12 @@ async function start(){
  // At the end the stone opens onto the ridge, with the city remaining in the side views.
  if(exterior[0]&&exterior[2]){
    const extent=82/1672;
-   litImage(exterior[0],82,435*extent,0,-1.2,-169,0,false,true);
+   if(clouds){
+     nightBackdrop(96,435*extent,0,-1.2,-169,0);
+     paintedClouds(96,435*extent,0,-.85,-168.7,0,-.15,-.17);
+   }else{
+     litImage(exterior[0],82,435*extent,0,-1.2,-169,0,false,true);
+   }
    const mountains=layers[2];
    litImage(exterior[2],82,mountains.h*extent,0,
      -1.2+(217.5-mountains.y-mountains.h/2)*extent,-168,0,true,true);
