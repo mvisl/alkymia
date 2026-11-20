@@ -1,6 +1,6 @@
 /** Fullscreen section page. No public route, framework, Pixi, or global CSS dependency. */
 export const PASSAGE_PAGE_ID='passage';
-export const PASSAGE_BUILD='passage-night-arcade-8';
+export const PASSAGE_BUILD='passage-night-arcade-9';
 let active=null,pending=null;
 export function mountPassagePage(options={}){
  if(active)return Promise.resolve(active);
@@ -211,7 +211,8 @@ async function start(){
  stone*=mix(vec3(1.),vec3(.74,.75,.76),uFloor*(1.-uBare));
  float windowWash=(1.-smoothstep(1.9,4.7,portal))*exp(-abs(vP.x-5.4)*.30);
  float moonFacing=max(0.,dot(surfaceNormal,normalize(vec3(.72,.34,.42))));
- stone+=vec3(.015,.031,.060)*windowWash*(.30+.70*moonFacing);
+ // The bounce from the open bays stays clearly cool against the lamplit stone.
+ stone+=vec3(.015,.037,.080)*windowWash*(.24+.76*moonFacing);
  // Light wedges extend diagonally inward from the open bays, with soft penumbrae.
  float across=clamp(6.-vP.x,0.,15.);
  float beam=abs(mod(vP.z+26.+across*.61,11.)-5.5);
@@ -232,9 +233,14 @@ async function start(){
  vec3 footLamp=vec3(sign(vP.x)*5.6,-1.88,vP.z-pierZ+.68);
  float footGraze=max(0.,dot(n,normalize(footLamp-vP+vec3(.001,0.,0.))));
  // Occlusion at the joint where the stone mass meets the floor and wall.
- float floorContact=exp(-pierDist*pierDist*.82-edgeX*edgeX*2.4)*uFloor;
- float wallContact=exp(-pierDist*pierDist*.92-edgeX*edgeX*.95-baseRise*.76)*(1.-uFloor)*(1.-uDetail);
- stone*=1.-.46*floorContact-.30*wallContact;
+ // A tight dark core hugs the plinth footprint; a faint wider skirt keeps it from floating.
+ float footprint=length(max(vec2(pierDist-.78,edgeX-.52),0.));
+ float floorContact=(.72*exp(-footprint*3.4)+.28*exp(-pierDist*pierDist*.82-edgeX*edgeX*2.4))*uFloor;
+ float pierGap=max(pierDist-.70,0.);
+ float wallContact=exp(-pierGap*2.6-edgeX*edgeX*.95)*(.30+.70*exp(-baseRise*.55))*(1.-uFloor)*(1.-uDetail);
+ // Walls and plinths sink into a thin crease where they meet the paving.
+ float footCrease=exp(-max(vP.y+2.45,0.)*2.6)*(1.-uFloor)*(1.-uBare)*(1.-.45*uDetail);
+ stone*=(1.-.58*floorContact-.40*wallContact)*(1.-.36*footCrease);
  stone+=vec3(.20,.098,.030)*basePool*radial*(.25+.75*footGraze);
  // A concealed low lamp grazes the first arch; the falloff follows the stone, not the camera.
  vec3 entryLamp=vec3(-5.05,-1.48,-2.1);
@@ -255,10 +261,15 @@ async function start(){
  float damp=(1.-uFloor)*(1.-smoothstep(-2.4,-1.1,vP.y));
  stone*=mix(1.,.79+.34*stain,.45)*(1.-.07*(1.-uFloor)*smoothstep(.45,.8,streak))*(1.-.26*damp);
  // Lamps graze the stone warmly and pick out its relief; everything else falls to cool night.
- stone*=mix(vec3(.57,.65,.78),vec3(1.24,1.02,.75),warmth);
+ // Near faces fall to a neutral charcoal rather than a blue veil; the blue is kept for distance.
+ float nearFace=(1.-smoothstep(5.,24.,vDepth))*(1.-uFloor);
+ vec3 coolShade=mix(vec3(.57,.65,.78),vec3(.58,.60,.64),nearFace);
+ stone*=mix(coolShade,vec3(1.24,1.02,.75),warmth);
+ // Unlit stone drops further so the lamplit faces carry the eye; the floor keeps its polish.
+ stone*=1.-.26*(1.-warmth)*(1.-uFloor)*(1.-.7*windowWash);
  stone*=1.+(grain-.5)*1.1*warmth;
  float vault=(1.-uFloor)*smoothstep(1.9,5.2,vP.y)*(1.-warmth);
- stone=mix(stone,stone*vec3(.27,.33,.47),vault*.85);
+ stone=mix(stone,stone*mix(vec3(.27,.33,.47),vec3(.29,.31,.37),nearFace),vault*.85);
  float frontGraze=max(0.,dot(n,normalize(vec3(-.32,.46,.83))));
  stone+=vec3(.30,.156,.052)*uDetail*frontGraze*radial*basePool*(.52+.48*warmth)*(.65+.7*grain);
  // Arches and piers: low lamplight climbs the dressed stone, cream at the foot, ochre toward the crown.
@@ -306,12 +317,14 @@ async function start(){
    float field=inset.x*inset.y*mix(uVaultArt,uSecondVaultArt,nextBay);
    float scan=nextBay>.5?texture2D(uSecondVault,clamp(mural,0.,1.)).r
                        :texture2D(uVault,clamp(mural,0.,1.)).r;
-   float painted=1.-smoothstep(.23,.81,scan);
-   float skywash=field*(.75+.25*mineral.r);
-   stone=mix(stone,stone*vec3(.74,.80,.87)+vec3(.035,.025,.013),skywash*.35);
-   float stoneLum=dot(stone,vec3(.299,.587,.114));
-   vec3 agedPigment=mix(vec3(.20,.126,.064),vec3(.026,.018,.015),smoothstep(.032,.23,stoneLum));
-   stone=mix(stone,agedPigment,painted*field*.76);
+   // Ivory plaster carries the picture; the ink stays dark in both moonlight and lamplight.
+   float plasterWeight=field*(.87+.13*mineral.r);
+   float rakingLight=.38+.62*max(warmth,.64*L);
+   vec3 plaster=stone*vec3(.81,.76,.69)+vec3(.13,.098,.065)*rakingLight;
+   stone=mix(stone,plaster,plasterWeight*.64);
+   float printed=1.-smoothstep(.22,.86,scan);
+   vec3 pigment=mix(vec3(.017,.021,.028),vec3(.039,.027,.018),warmth);
+   stone=mix(stone,pigment,printed*field*.88);
  }
  if(uPanelAmount>.5){
    // Engraved panels: a smooth ivory plate against the rough frame, sepia cuts with a burnished lower lip.
