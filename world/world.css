@@ -17,6 +17,9 @@
 .world-canvas>.world-dimmer{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .45s ease}
 .world-canvas[data-active]>.world-dimmer{opacity:.3}
 .landmark.is-emphasized .landmark-caption{opacity:1;transform:translate(-50%,0)}
+/* Keep keyboard focus visible in the caption, without framing the artwork. */
+.landmark:focus-visible{outline:none}
+.landmark:focus-visible .landmark-caption b{text-decoration:underline;text-underline-offset:.23em;text-decoration-thickness:2px}
 #world-navigation a.is-emphasized{color:var(--ink)}#world-navigation a{transition:color .35s}
 #world-navigation:has(.is-emphasized) a:not(.is-emphasized){color:var(--quiet)}
 @media(prefers-reduced-motion:reduce){.world-canvas>.world-dimmer,#world-navigation a{transition:none}}
